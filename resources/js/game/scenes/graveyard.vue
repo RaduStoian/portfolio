@@ -9,15 +9,13 @@
       @pointerup="onUp"
       @pointercancel="onUp"
       @pointerleave="onUp"
+      @wheel="onWheel"
     ></canvas>
 
     <div class="hud">
-      <RouterLink to="/" class="btn">← Town square</RouterLink>
       <button type="button" class="btn" @click="reset">Rebuild stones</button>
       <span class="tally">{{ broken }} / {{ total }} smashed</span>
     </div>
-
-    <p class="hint">Drag the sledgehammer. Swing hard — a gentle tap won't crack anything.</p>
   </div>
 </template>
 
@@ -25,8 +23,13 @@
 import { ref, onBeforeUnmount } from 'vue';
 import Matter from 'matter-js';
 import { useScene } from '../useScene.js';
+import { useBack } from '../useBack.js';
+import { drawBackOverlay, isBackButtonEvent } from '../backButton.js';
+import { createCameraInput } from '../cameraInput.js';
+import { grabAt } from '../grab.js';
 import { P } from '../palette.js';
-import { rect, px, drawSway, drawSprite } from '../pixel.js';
+import { rect, px, drawSway } from '../pixel.js';
+import { wrapText } from '../text.js';
 import {
   GRAVEYARD_W,
   GRAVEYARD_H,
@@ -35,13 +38,15 @@ import {
   bakeGraveyardProps,
   bakeGravestone,
   bakeHammer,
-  bakeFlag,
-  bakePole,
-  bakeDust,
-  shatterCells,
+  bakeGraveKeeper,
+  bakeGraveBubble,
+  bakeCrypt,
+  bakeTorchFrames,
+  bakeTorchGlow,
 } from '../art/graveyard.js';
+import { bakeDust, shatterCells } from '../art/shared.js';
 
-const { Engine, Composite, Bodies, Body, Constraint, Events, Query, Vector, Vertices } = Matter;
+const { Engine, Composite, Bodies, Body, Constraint, Events, Vector, Vertices } = Matter;
 
 // Relative speed (px per physics step) a hammer strike must exceed to break a
 // stone. Tuned so a deliberate swing shatters and a nudge or a topple doesn't.
@@ -52,14 +57,30 @@ const HEAD_H = 10;
 const HANDLE_LEN = 30;
 
 const STONE_LAYOUT = [
-  { x: 118, variant: 0, epitaph: [12, 9, 11] },
-  { x: 176, variant: 2, epitaph: [10, 13] },
-  { x: 236, variant: 1, epitaph: [14, 8, 12, 9] },
+  {
+    id: 'poop-fight', x: 72, variant: 0, epitaph: [12, 8],
+    words: 'POOP FIGHT. DOUBLE JUMP, THEN LAND ON THE OTHER GUY FIRST.',
+  },
+  {
+    id: 'quick-draw', x: 113, variant: 2, epitaph: [9, 13],
+    words: 'QUICK DRAW. PULL YOUR PIXEL SIX SHOOTER BEFORE THE COWBOY DOES.',
+  },
+  {
+    id: 'girlfriend-games', x: 154, variant: 1, epitaph: [14, 9, 12],
+    words: 'A BIG GUIDE MADE TO HELP COUPLES FIND GAMES THEY BOTH ENJOY.',
+  },
+  {
+    id: 'long-distance', x: 195, variant: 3, epitaph: [10, 14, 8],
+    words: 'VIDEO, VOICE AND GAMES IN ONE PLACE. PLAY CHESS FACE TO FACE FROM FAR AWAY.',
+  },
 ];
+
+const SPEECH_WIDTH = 104;
 
 export default {
   name: 'GraveyardScene',
   setup() {
+    const goBack = useBack();
     const dragging = ref(false);
     const broken = ref(0);
     const total = STONE_LAYOUT.length;
@@ -69,8 +90,11 @@ export default {
     const scenery = bakeGraveyardProps();
     const stoneSprites = STONE_LAYOUT.map((def) => bakeGravestone(def.variant, def.epitaph));
     const hammerSprite = bakeHammer(HEAD_W, HEAD_H, HANDLE_LEN);
-    const flagSprite = bakeFlag(30, 15);
-    const poleSprite = bakePole(62);
+    const keeper = bakeGraveKeeper();
+    const crypt = bakeCrypt();
+    const torchFrames = bakeTorchFrames();
+    const torchGlow = bakeTorchGlow();
+    const keeperBubbles = STONE_LAYOUT.map((stone) => bakeGraveBubble(wrapText(stone.words, SPEECH_WIDTH)));
     const dustSprites = bakeDust();
 
     // --- physics ----------------------------------------------------------
@@ -85,6 +109,16 @@ export default {
     let hammerOffset = { x: 0, y: 0 };
     let dragConstraint = null;
     let pointer = { x: 0, y: 0 };
+    let keeperBubble = null;
+    let keeperTimer = 0;
+    let torchTimer = 1.2 + Math.random() * 2;
+    let torchFlash = 0;
+    let torchSparks = [];
+
+    function speak(index) {
+      keeperBubble = keeperBubbles[index];
+      keeperTimer = Math.min(8, 3 + STONE_LAYOUT[index].words.length * 0.035);
+    }
 
     const statics = [
       Bodies.rectangle(GRAVEYARD_W / 2, GROUND_Y + 20, GRAVEYARD_W + 80, 40, { isStatic: true, friction: 0.9 }),
@@ -145,7 +179,7 @@ export default {
      * reads as floating. Falling from a lean settles it lying down.
      */
     function restHammer() {
-      Body.setPosition(hammer, { x: 278, y: GROUND_Y - 52 });
+      Body.setPosition(hammer, { x: 28, y: GROUND_Y - 48 });
       Body.setAngle(hammer, 1.35);
       Body.setVelocity(hammer, { x: 0, y: 0 });
       Body.setAngularVelocity(hammer, 0);
@@ -153,57 +187,6 @@ export default {
 
     addStones();
     addHammer();
-
-    // --- cloth flag -------------------------------------------------------
-    // A constraint grid, not a physics cheat: the nodes are real bodies, but
-    // they collide with nothing (mask 0) so the cloth can never get wedged
-    // inside a gravestone and explode.
-    const POLE_X = 52;
-    const POLE_TOP = GROUND_Y - 62;
-    const CLOTH_COLS = 11;
-    const CLOTH_ROWS = 6;
-    // Node spacing x cols must match the flag texture's aspect, or the cloth
-    // squashes the art. 10 gaps x 3px = 30px wide, 5 x 3px = 15px tall.
-    const CLOTH_GAP = 3;
-    const clothNodes = [];
-    const clothConstraints = [];
-
-    for (let r = 0; r < CLOTH_ROWS; r++) {
-      const row = [];
-      for (let c = 0; c < CLOTH_COLS; c++) {
-        const node = Bodies.circle(POLE_X + 2 + c * CLOTH_GAP, POLE_TOP + 3 + r * CLOTH_GAP, 0.6, {
-          isStatic: c === 0,
-          frictionAir: 0.08,
-          density: 0.001,
-          collisionFilter: { mask: 0 },
-        });
-        row.push(node);
-        Composite.add(world, node);
-      }
-      clothNodes.push(row);
-    }
-
-    const link = (a, b, stiffness) => {
-      const constraint = Constraint.create({
-        bodyA: a,
-        bodyB: b,
-        stiffness,
-        damping: 0.06,
-        length: Vector.magnitude(Vector.sub(b.position, a.position)),
-        render: { visible: false },
-      });
-      clothConstraints.push(constraint);
-      Composite.add(world, constraint);
-    };
-
-    for (let r = 0; r < CLOTH_ROWS; r++) {
-      for (let c = 0; c < CLOTH_COLS; c++) {
-        if (c + 1 < CLOTH_COLS) link(clothNodes[r][c], clothNodes[r][c + 1], 0.9);
-        if (r + 1 < CLOTH_ROWS) link(clothNodes[r][c], clothNodes[r + 1][c], 0.7);
-        // Shear links stop the grid folding flat into a line.
-        if (c + 1 < CLOTH_COLS && r + 1 < CLOTH_ROWS) link(clothNodes[r][c], clothNodes[r + 1][c + 1], 0.25);
-      }
-    }
 
     // --- shattering -------------------------------------------------------
     function shatter(stone, impactPoint, impulse) {
@@ -304,36 +287,40 @@ export default {
     // element, which knows nothing about our virtual-pixel transform. Driving
     // a plain Constraint by hand is both shorter and impossible to desync.
     function onDown(event) {
+      if (isBackButtonEvent(event)) {
+        goBack();
+        return;
+      }
+      if (cameraInput.pressOverlay(event)) return;
       const { x, y } = toVirtual(event);
       pointer = { x, y };
 
-      const candidates = [hammer, ...chunks.map((c) => c.body), ...stones.filter((s) => s.alive).map((s) => s.body)];
-      const found = Query.point(candidates, pointer);
-
-      // Prefer the hammer when the click overlaps several things.
-      let body = found.includes(hammer) ? hammer : found[0];
-
-      // The handle is 3px wide — demanding an exact hit on it makes the
-      // hammer feel slippery. Fall back to the nearest body within a small
-      // radius, which is what the player meant anyway.
-      if (!body) {
-        let best = Infinity;
-        for (const candidate of candidates) {
-          for (const part of candidate.parts.length > 1 ? candidate.parts.slice(1) : candidate.parts) {
-            const d = Vector.magnitude(Vector.sub(part.position, pointer));
-            if (d < best && d < 7) {
-              best = d;
-              body = candidate;
-            }
-          }
-        }
+      const candidates = [...chunks.map((c) => c.body), ...stones.filter((s) => s.alive).map((s) => s.body), hammer];
+      // `grabAt` returns a point guaranteed to be on the body, so the hammer
+      // hangs from wherever you took hold of it — grab the end of the handle
+      // and it swings from the end of the handle. The hammer is last in the
+      // list so it wins ties, which is what you meant when you clicked.
+      const grab = grabAt(candidates, pointer, 7);
+      if (!grab) {
+        cameraInput.startPan(event);
+        return;
       }
-      if (!body) return;
 
+      const { body } = grab;
+      if (body.plugin?.kind === 'stone') speak(body.plugin.index);
       dragConstraint = Constraint.create({
-        pointA: { x, y },
+        pointA: { x: grab.point.x, y: grab.point.y },
         bodyB: body,
-        pointB: Vector.rotate(Vector.sub(pointer, body.position), -body.angle),
+        // A plain world-space offset, NOT rotated back by -body.angle. Matter
+        // captures the body's angle at Constraint.create as its own internal
+        // `angleB` and re-rotates pointB by the *change* in angle each solve
+        // step (see Constraint.solve) — it already expects a world-oriented
+        // offset and updates it incrementally from there. Pre-rotating here
+        // double-counted the current angle: harmless near the centroid, but
+        // for a point far out on a tilted body (the sledgehammer rests at
+        // ~77°) it put the anchor somewhere else on the body entirely, which
+        // is what made grabbing the handle tip end up "holding" the head.
+        pointB: Vector.sub(grab.point, body.position),
         stiffness: body === hammer ? 0.09 : 0.2,
         damping: 0.12,
         length: 0,
@@ -345,12 +332,14 @@ export default {
     }
 
     function onMove(event) {
+      if (cameraInput.move(event)) return;
       const { x, y } = toVirtual(event);
       pointer = { x, y };
       if (dragConstraint) dragConstraint.pointA = { x, y };
     }
 
     function onUp() {
+      cameraInput.end();
       if (dragConstraint) {
         Composite.remove(world, dragConstraint);
         dragConstraint = null;
@@ -363,21 +352,31 @@ export default {
     const STEP = 1000 / 60;
 
     function update(dt, t) {
-      // Wind: a slow base gust with a faster ripple on top, applied to every
-      // cloth node. Two frequencies is the cheapest thing that stops the flag
-      // looking like it's on a metronome.
-      const gust = 0.62 + 0.38 * Math.sin(t * 0.9) + 0.22 * Math.sin(t * 2.7 + 1.3);
-      for (const row of clothNodes) {
-        for (const node of row) {
-          if (node.isStatic) continue;
-          Body.applyForce(node, node.position, {
-            // Wind has to out-pull gravity (0.001) or the flag just hangs
-            // limp against the pole instead of streaming.
-            x: node.mass * 0.00105 * gust,
-            y: node.mass * 0.00008 * Math.sin(t * 3.4 + node.position.x * 0.4),
+      if (keeperTimer > 0) keeperTimer -= dt;
+      torchFlash = Math.max(0, torchFlash - dt * 2.8);
+      torchTimer -= dt;
+      if (torchTimer <= 0) {
+        torchTimer = 1.4 + Math.random() * 3.2;
+        torchFlash = 1;
+        const count = 3 + Math.floor(Math.random() * 5);
+        for (let i = 0; i < count; i++) {
+          torchSparks.push({
+            x: 300 + (Math.random() - 0.5) * 5,
+            y: 99 + Math.random() * 3,
+            vx: -8 - Math.random() * 20,
+            vy: -18 - Math.random() * 30,
+            age: 0,
+            life: 0.45 + Math.random() * 0.55,
           });
         }
       }
+      for (const spark of torchSparks) {
+        spark.age += dt;
+        spark.vy += 18 * dt;
+        spark.x += spark.vx * dt;
+        spark.y += spark.vy * dt;
+      }
+      torchSparks = torchSparks.filter((spark) => spark.age < spark.life);
 
       // Fixed timestep, capped substeps: a long frame slows the sim down
       // rather than letting bodies tunnel through the ground.
@@ -385,6 +384,24 @@ export default {
       let steps = 0;
       while (accumulator >= STEP && steps < 3) {
         Engine.update(engine, STEP);
+
+        // Cap and bleed off spin on whatever's held, every substep rather than
+        // once per rendered frame. The constraint pins an exact point on the
+        // body — grab.js guarantees that — but a light, off-centre object
+        // like the sledgehammer has almost no rotational inertia against a
+        // spring anchored near the handle tip, so the torque from a single
+        // physics step can spin it past 180° before it's even drawn once. By
+        // the time a once-per-frame damping pass got a chance to act, the
+        // flip had already happened and rendered — from the outside it looked
+        // like the hammer swapped which end had the handle. Intervening
+        // inside the substep loop stops the spin before Matter ever gets a
+        // second step to build on it.
+        if (dragConstraint) {
+          const held = dragConstraint.bodyB;
+          const capped = Math.max(-6, Math.min(6, held.angularVelocity));
+          Body.setAngularVelocity(held, capped * 0.5);
+        }
+
         accumulator -= STEP;
         steps++;
       }
@@ -438,42 +455,6 @@ export default {
       ctx.restore();
     }
 
-    function drawFlag(ctx) {
-      const fw = flagSprite.w;
-      const fh = flagSprite.h;
-      const topRow = clothNodes[0];
-      const bottomRow = clothNodes[CLOTH_ROWS - 1];
-
-      // Where each texture column lands on the simulated cloth.
-      const sample = (x) => {
-        const u = (x / fw) * (CLOTH_COLS - 1);
-        const i = Math.min(CLOTH_COLS - 2, Math.floor(u));
-        const f = u - i;
-        const lerp = (a, b) => a + (b - a) * f;
-        return {
-          x: lerp(topRow[i].position.x, topRow[i + 1].position.x),
-          top: lerp(topRow[i].position.y, topRow[i + 1].position.y),
-          bottom: lerp(bottomRow[i].position.y, bottomRow[i + 1].position.y),
-        };
-      };
-
-      for (let x = 0; x < fw; x++) {
-        const here = sample(x);
-        const next = sample(x + 1);
-
-        // Width comes from the gap to the *next* column, so when the cloth
-        // stretches wider than the texture the strips widen to fill instead of
-        // leaving 1px gaps striping the flag.
-        const left = Math.round(here.x);
-        const width = Math.max(1, Math.round(next.x) - left);
-        const height = Math.max(1, Math.round(here.bottom - here.top));
-
-        // Upright strips rather than rotated quads: the wave still reads, and
-        // every pixel stays on the grid.
-        ctx.drawImage(flagSprite.canvas, x, 0, 1, fh, left, Math.round(here.top), width, height);
-      }
-    }
-
     function draw(ctx, t) {
       ctx.drawImage(backdrop.canvas, 0, 0);
 
@@ -486,13 +467,33 @@ export default {
         px(ctx, star.x, star.y, pulse > 0.7 ? '#fffbe8' : pulse > 0 ? '#ded8c0' : '#8f89a8');
       }
 
-      // Bare trees, swaying on the same wind that moves the flag.
+      // Bare trees moving gently in the night wind.
       for (const tree of scenery.trees) drawSway(ctx, tree.sprite, tree.x, tree.y, t, tree);
 
-      drawSprite(ctx, scenery.lamp.sprite, scenery.lamp.x, scenery.lamp.y);
+      // The crypt is scenery, not a collider: only its cropped side wall is
+      // visible, while the entrance continues beyond the right edge.
+      ctx.drawImage(crypt.canvas, 274, 60);
 
-      ctx.drawImage(poleSprite.canvas, POLE_X - 1, POLE_TOP - 4);
-      drawFlag(ctx);
+      // The wall torch belongs to the crypt layer: above the masonry, but
+      // behind every physical stone, chunk and tool that can pass in front of
+      // it. Sparks and glow share that depth so they cannot wash over the
+      // sledgehammer or a tombstone.
+      const flame = torchFrames[Math.floor(t * 11) % torchFrames.length];
+      ctx.drawImage(flame.canvas, 296, 94);
+      for (const spark of torchSparks) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = Math.max(0, 1 - spark.age / spark.life);
+        px(ctx, Math.round(spark.x), Math.round(spark.y), spark.age < 0.18 ? P.lamp : P.ember);
+      }
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.62 + Math.sin(t * 6.7) * 0.08 + Math.sin(t * 14.1) * 0.05 + torchFlash * 0.35;
+      ctx.drawImage(
+        torchGlow.canvas,
+        300 - torchGlow.w / 2,
+        101 - torchGlow.h / 2,
+      );
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
 
       for (const stone of stones) {
         if (!stone.alive) continue;
@@ -512,34 +513,41 @@ export default {
 
       drawSpriteBody(ctx, hammer, hammerSprite, hammerOffset);
 
+      // The keeper sits at the quiet edge of the yard, watching the row. A
+      // one-pixel breathing bob and occasional blink keep him alive without
+      // making the solemn scene busy.
+      const keeperX = 242;
+      const keeperY = GROUND_Y - keeper.sprite.h + Math.round(Math.sin(t * 1.8) * 0.5);
+      ctx.drawImage(keeper.sprite.canvas, keeperX, keeperY);
+      if (Math.sin(t * 0.72 + 1.1) > 0.985) px(ctx, keeperX + keeper.eye.x, keeperY + keeper.eye.y, P.skinDark);
+
       // Foreground bushes, drawn over the physics so smashed chunks can roll
       // behind them.
       for (const bush of scenery.bushes) drawSway(ctx, bush.sprite, bush.x, bush.y, t, bush);
 
-      // Lantern light, additive with a slow flicker.
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = 0.8 + Math.sin(t * 5.7) * 0.07 + Math.sin(t * 12.1) * 0.04;
-      ctx.drawImage(
-        scenery.glow.canvas,
-        scenery.lamp.glow.x - scenery.glow.w / 2,
-        scenery.lamp.glow.y - scenery.glow.h / 2,
-      );
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
+      if (keeperTimer > 0 && keeperBubble) {
+        const bx = Math.min(GRAVEYARD_W - keeperBubble.w - 4, 208);
+        const by = Math.max(5, keeperY - keeperBubble.h - 3);
+        ctx.drawImage(keeperBubble.canvas, bx, by);
+      }
 
       ctx.globalAlpha = 0.16;
       rect(ctx, 0, 0, GRAVEYARD_W, 8, P.ink);
       rect(ctx, 0, GRAVEYARD_H - 8, GRAVEYARD_W, 8, P.ink);
       ctx.globalAlpha = 1;
+
     }
 
-    const { canvasRef, toVirtual } = useScene({
+    const scene = useScene({
       width: GRAVEYARD_W,
       height: GRAVEYARD_H,
       background: P.ink,
       update,
       draw,
+      drawOverlay: drawBackOverlay,
     });
+    const { canvasRef, toVirtual } = scene;
+    const cameraInput = createCameraInput(scene);
 
     onBeforeUnmount(() => {
       Events.off(engine);
@@ -547,7 +555,9 @@ export default {
       Engine.clear(engine);
     });
 
-    return { canvasRef, dragging, broken, total, reset, onDown, onMove, onUp };
+    const onWheel = (event) => cameraInput.wheel(event);
+
+    return { canvasRef, dragging, broken, total, reset, onDown, onMove, onUp, onWheel, goBack };
   },
 };
 </script>
@@ -573,8 +583,8 @@ export default {
 
 .hud {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 50px;
+  right: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -600,15 +610,4 @@ export default {
   color: rgba(255, 255, 255, 0.45);
 }
 
-.hint {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 12px;
-  margin: 0;
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
-  pointer-events: none;
-}
 </style>

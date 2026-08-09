@@ -1,6 +1,7 @@
 import { P } from '../palette.js';
-import { makeCanvas, rect, px, bands, dither, speckle, hash2, poly, outlineSprite } from '../pixel.js';
-import { bakeBush, bakeLamp, bakeGlow, bakeFlowers } from './props.js';
+import { makeCanvas, rect, px, poly, bands, dither, speckle, hash2, outlineSprite } from '../pixel.js';
+import { drawText, textWidth } from '../text.js';
+import { bakeBush, bakeGlow, bakeFlowers } from './props.js';
 
 export const GRAVEYARD_W = 320;
 export const GRAVEYARD_H = 180;
@@ -104,8 +105,7 @@ export function bakeBackdrop() {
 
 /**
  * Scenery for the graveyard. Bare, dead trees rather than the town's leafy
- * ones — same silhouette language, different mood — plus a lantern by the gate
- * so the scene has one warm point of light.
+ * ones — same silhouette language, different mood.
  */
 export function bakeGraveyardProps() {
     /**
@@ -177,7 +177,6 @@ export function bakeGraveyardProps() {
     return {
         trees: [
             plantTree(deadTree(1, 1), 4, 2, { amp: 1.4, speed: 1.0, phase: 0.3 }),
-            plantTree(deadTree(2, 0.85), 272, 1, { amp: 1.2, speed: 1.25, phase: 2.1 }),
             plantTree(deadTree(3, 0.7), 200, 3, { amp: 1.0, speed: 1.5, phase: 3.6 }),
         ],
         bushes: [
@@ -186,8 +185,6 @@ export function bakeGraveyardProps() {
             { sprite: bakeFlowers(2), x: 140, y: GROUND_Y + 6, amp: 0.7, speed: 2.2, phase: 0.5 },
             { sprite: bakeFlowers(0), x: 254, y: GROUND_Y + 10, amp: 0.7, speed: 2.5, phase: 1.9 },
         ],
-        lamp: { sprite: bakeLamp(), x: 22, y: GROUND_Y - 33, glow: { x: 26, y: GROUND_Y - 30 } },
-        glow: bakeGlow(16),
         // Stars live as data so the scene can twinkle them.
         stars: Array.from({ length: 110 }, (_, i) => ({
             x: Math.floor(hash2(i, 1, 51) * GRAVEYARD_W),
@@ -199,6 +196,79 @@ export function bakeGraveyardProps() {
 }
 
 /**
+ * The near side wall of a crypt, cropped hard by the right edge of the scene.
+ * Its roof rises out of frame to the right and falls toward the keeper on the
+ * left; the actual entrance is deliberately beyond the canvas.
+ */
+export function bakeCrypt() {
+    const w = 72;
+    const h = 88;
+    const s = makeCanvas(w, h);
+    const { ctx } = s;
+
+    // Side wall below the sloping eave.
+    poly(ctx, [[8, 28], [w, 2], [w, h], [8, h]], P.stoneDark);
+    poly(ctx, [[11, 31], [w, 7], [w, h], [11, h]], P.stone);
+
+    // Chunky roof cap, descending toward the left.
+    for (let i = 0; i < 5; i++) {
+        poly(ctx, [[4 + i, 22 + i], [w, i - 4], [w, i], [4 + i, 27 + i]], i < 2 ? P.stoneLit : P.stoneDeep);
+    }
+
+    // Irregular masonry courses follow the wall rather than the roof.
+    for (let y = 38; y < h; y += 10) {
+        rect(ctx, 10, y, w - 10, 1, P.stoneDeep);
+        const stagger = ((y / 10) & 1) ? 11 : 20;
+        for (let x = stagger; x < w; x += 20) rect(ctx, x, y - 9, 1, 9, P.stoneDark);
+    }
+    speckle(ctx, 12, 34, w - 12, h - 34, P.stoneLit, 0.035, 114);
+
+    // Broken left corner and a little ivy soften the join with the yard.
+    rect(ctx, 8, 34, 4, h - 34, P.stoneDeep);
+    rect(ctx, 9, 35, 2, h - 35, P.stoneLit);
+    for (let y = 45; y < h - 5; y += 6) {
+        px(ctx, 7 + (y % 3), y, P.leafDark);
+        rect(ctx, 5 + (y % 4), y + 1, 4, 2, y % 12 ? P.leaf : P.leafDark);
+    }
+
+    // A cellar entrance falling away into the earth. Only its left edge is
+    // visible; the doorway and the rest of the steps continue offscreen.
+    poly(ctx, [[28, 67], [49, 57], [w, 67], [w, h], [28, h]], P.stoneDeep);
+    poly(ctx, [[34, 70], [52, 62], [w, 70], [w, h], [34, h]], P.ink);
+    for (let y = 75, x = 37; y < h; y += 5, x += 4) {
+        rect(ctx, x, y, w - x, 2, P.stoneDark);
+        rect(ctx, x + 2, y, w - x - 2, 1, P.stoneLit);
+    }
+
+    // Iron wall bracket. The animated flame is drawn by the scene.
+    rect(ctx, 18, 49, 8, 2, P.ironDeep);
+    rect(ctx, 23, 47, 2, 9, P.ironDark);
+    rect(ctx, 21, 54, 6, 2, P.ironDeep);
+    px(ctx, 19, 49, P.ironLit);
+
+    return s;
+}
+
+/** Three discrete flame shapes: stepped pixels stay crisp while flickering. */
+export function bakeTorchFrames() {
+    return [0, 1, 2].map((frame) => {
+        const s = makeCanvas(9, 14);
+        const { ctx } = s;
+        const lean = frame === 0 ? -1 : frame === 2 ? 1 : 0;
+        rect(ctx, 3, 9, 3, 5, P.woodDark);
+        rect(ctx, 3, 9, 1, 5, P.woodLit);
+        poly(ctx, [[4, 10], [1 + lean, 6], [3 + lean, 1], [5 + lean, 5], [7, 7]], P.ember);
+        poly(ctx, [[4, 9], [3 + lean, 6], [4 + lean, 3], [6, 7]], P.window);
+        px(ctx, 4 + lean, 7, P.lamp);
+        return outlineSprite(s, P.outline);
+    });
+}
+
+export function bakeTorchGlow() {
+    return bakeGlow(20);
+}
+
+/**
  * A gravestone at true size. Three silhouettes so the row doesn't look cloned.
  * The sprite is the *only* source of the stone's look — when it shatters, each
  * chunk clips its own region out of this same canvas, so the crack lines run
@@ -206,7 +276,7 @@ export function bakeGraveyardProps() {
  */
 export function bakeGravestone(variant, epitaph) {
     const w = 26;
-    const h = variant === 2 ? 42 : 36;
+    const h = variant === 2 ? 42 : variant === 3 ? 40 : 36;
     const s = makeCanvas(w, h);
     const { ctx } = s;
 
@@ -232,15 +302,43 @@ export function bakeGravestone(variant, epitaph) {
         body(2, 4, 22, h - 4);
         rect(ctx, 4, 2, 18, 2, P.stone);
         rect(ctx, 4, 2, 2, 2, P.stoneLit);
-    } else {
+    } else if (variant === 2) {
         // Cross.
         body(9, 2, 8, h - 2);
         body(2, 11, 22, 7);
         rect(ctx, 2, 11, 22, 1, P.stoneLit);
+    } else {
+        // Paired pillars joined by a lintel: two people connected across a
+        // distance, without turning the memorial into a tiny literal screen.
+        body(3, 7, 7, h - 7);
+        body(16, 7, 7, h - 7);
+        body(3, 4, 20, 7);
+        rect(ctx, 11, 11, 4, 3, P.glassDark);
+        px(ctx, 12, 12, P.glassLit);
+    }
+
+    // Tiny pictograms give each memorial an identity before it is touched.
+    // They are carved, not painted, so they still belong to the same old row.
+    if (variant === 0) {
+        // A deliberately cheeky little coiled pile.
+        rect(ctx, 10, 12, 7, 2, P.stoneDeep);
+        rect(ctx, 11, 10, 5, 2, P.stoneDeep);
+        rect(ctx, 12, 8, 3, 2, P.stoneDeep);
+    } else if (variant === 1) {
+        // Heart for the couples game guide.
+        rect(ctx, 9, 10, 3, 3, P.stoneDeep);
+        rect(ctx, 14, 10, 3, 3, P.stoneDeep);
+        rect(ctx, 10, 12, 6, 3, P.stoneDeep);
+        rect(ctx, 12, 15, 2, 2, P.stoneDeep);
+    } else if (variant === 2) {
+        // Sheriff-star glint in the centre of the crosspiece.
+        rect(ctx, 11, 11, 4, 7, P.stoneDeep);
+        rect(ctx, 9, 13, 8, 3, P.stoneDeep);
+        px(ctx, 12, 14, P.goldDark);
     }
 
     // Carved epitaph: two-tone so the letters read as recessed.
-    const lineY = variant === 2 ? 22 : 16;
+    const lineY = variant === 2 ? 23 : variant === 3 ? 19 : 21;
     for (let i = 0; i < epitaph.length; i++) {
         const y = lineY + i * 5;
         if (y > h - 6) break;
@@ -259,6 +357,88 @@ export function bakeGravestone(variant, epitaph) {
         }
     }
 
+    return s;
+}
+
+/**
+ * A retired groundskeeper sitting side-on in a plain wooden chair. He faces
+ * left toward the graves; the returned eye coordinate lets the scene blink
+ * without baking a second animation frame.
+ */
+export function bakeGraveKeeper() {
+    const s = makeCanvas(38, 47);
+    const { ctx } = s;
+
+    // Chair, behind the keeper. Both legs are deliberately uninterrupted,
+    // plain brown posts so they cannot be mistaken for his boots.
+    rect(ctx, 25, 8, 3, 34, P.woodDeep);
+    rect(ctx, 27, 9, 2, 30, P.woodLit);
+    rect(ctx, 12, 34, 18, 3, P.wood);
+    rect(ctx, 14, 36, 3, 11, P.wood);
+    rect(ctx, 27, 36, 3, 11, P.wood);
+
+    // Seated coat and bent legs.
+    poly(ctx, [[17, 21], [28, 23], [26, 35], [13, 35], [10, 29]], P.roofGreenDark);
+    rect(ctx, 13, 23, 2, 11, P.roofGreen);
+    // Thighs bend left from the seat, then two separate trouser legs and boots
+    // land wholly to the left of the chair's left leg.
+    rect(ctx, 8, 33, 12, 5, P.roofGreenDark);
+    rect(ctx, 5, 36, 4, 9, P.ironDark);
+    rect(ctx, 10, 37, 4, 8, P.ironDeep);
+    rect(ctx, 2, 44, 7, 3, P.woodDeep);
+    rect(ctx, 7, 44, 7, 3, P.woodDeep);
+    rect(ctx, 8, 29, 13, 4, P.roofGreenDark);
+    rect(ctx, 6, 30, 5, 3, P.skinDark);
+
+    // Fresh left-facing profile: one continuous skin silhouette, with the
+    // forehead, nose, mouth and chin all changing the outer edge.
+    poly(ctx, [
+        [14, 12], [24, 12], [24, 20], [22, 20], [22, 22],
+        [18, 22], [18, 24], [14, 24], [14, 21], [11, 21],
+        [11, 19], [9, 19], [9, 17], [12, 17], [12, 14], [14, 14],
+    ], P.skin);
+    rect(ctx, 22, 14, 2, 4, P.skinDark); // ear
+    px(ctx, 13, 16, P.ink);              // eye
+    px(ctx, 10, 19, P.skinDark);         // underside of nose
+    px(ctx, 13, 21, P.skinDark);         // mouth gap
+
+    // Dark silver facial hair, drawn as small jagged clusters. The moustache
+    // is separated from the tapered beard by the visible mouth pixel above;
+    // sparse pale pixels suggest grey hair without making another white slab.
+    rect(ctx, 10, 20, 4, 1, P.stoneDeep);
+    rect(ctx, 11, 21, 3, 1, P.stoneDark);
+    rect(ctx, 14, 20, 5, 2, P.stoneDeep);
+    poly(ctx, [
+        [15, 20], [21, 19], [21, 22], [20, 22], [20, 25],
+        [18, 25], [18, 28], [15, 29], [14, 27], [12, 27],
+        [12, 24], [10, 24], [11, 22], [14, 22],
+    ], P.stoneDark);
+    px(ctx, 17, 21, P.boneDark);
+    px(ctx, 13, 23, P.boneDark);
+    px(ctx, 18, 24, P.boneDark);
+    px(ctx, 15, 27, P.stoneLit);
+
+    // Battered wide-brim hat.
+    poly(ctx, [[20, 2], [27, 11], [13, 11]], P.woodDark);
+    poly(ctx, [[20, 3], [23, 8], [16, 8]], P.wood);
+    rect(ctx, 8, 10, 21, 3, P.woodDeep);
+    rect(ctx, 9, 10, 19, 1, P.woodLit);
+
+    return { sprite: outlineSprite(s, P.outline), eye: { x: 14, y: 17 } };
+}
+
+/** Compact speech bubble with its tail aimed down-right at the keeper. */
+export function bakeGraveBubble(lines) {
+    const label = Array.isArray(lines) ? lines : [lines];
+    const w = Math.max(...label.map(textWidth)) + 8;
+    const bodyH = 4 + label.length * 7;
+    const s = makeCanvas(w, bodyH + 4);
+    const { ctx } = s;
+    rect(ctx, 0, 0, w, bodyH, P.ink);
+    rect(ctx, 1, 1, w - 2, bodyH - 2, '#f4efe0');
+    poly(ctx, [[w - 10, bodyH - 1], [w - 4, bodyH - 1], [w - 6, bodyH + 3]], P.ink);
+    poly(ctx, [[w - 9, bodyH - 1], [w - 5, bodyH - 1], [w - 6, bodyH + 1]], '#f4efe0');
+    label.forEach((line, i) => drawText(ctx, line, 4, 3 + i * 7, P.ink));
     return s;
 }
 
@@ -287,93 +467,4 @@ export function bakeHammer(headW, headH, handleLen) {
     for (let y = h - 8; y < h; y += 2) rect(ctx, hx, y, 3, 1, P.woodDark);
 
     return s;
-}
-
-/** The flag's cloth texture; rendered column-by-column onto the simulated cloth. */
-export function bakeFlag(w, h) {
-    const s = makeCanvas(w, h);
-    const { ctx } = s;
-
-    rect(ctx, 0, 0, w, h, P.cloth);
-    rect(ctx, 0, 0, w, 2, P.clothDark);
-    rect(ctx, 0, h - 2, w, 2, P.clothDark);
-
-    // A pale skull-ish sigil, so the waving is easy to read at a glance.
-    const cx = Math.floor(w / 2);
-    const cy = Math.floor(h / 2);
-    rect(ctx, cx - 3, cy - 4, 7, 6, P.bone);
-    rect(ctx, cx - 2, cy + 2, 5, 2, P.bone);
-    px(ctx, cx - 2, cy - 2, P.ink);
-    px(ctx, cx + 2, cy - 2, P.ink);
-    rect(ctx, cx - 1, cy + 2, 1, 2, P.ink);
-    rect(ctx, cx + 1, cy + 2, 1, 2, P.ink);
-
-    return s;
-}
-
-/** Wooden flagpole. */
-export function bakePole(h) {
-    const s = makeCanvas(4, h);
-    const { ctx } = s;
-    rect(ctx, 1, 0, 2, h, P.wood);
-    rect(ctx, 1, 0, 1, h, P.woodLit);
-    rect(ctx, 1, 0, 2, 2, P.boneDark);
-    return s;
-}
-
-/**
- * Split a w x h sprite into convex chunks over a jittered grid.
- *
- * The grid's *vertices* are jittered rather than each cell independently, so
- * neighbouring chunks share exact corners — the pieces still fit together like
- * a broken stone instead of leaving gaps. Cells stay convex (matter needs that
- * without poly-decomp) because the jitter is well under half a cell.
- */
-export function shatterCells(w, h, cols, rows, seed) {
-    const cellW = w / cols;
-    const cellH = h / rows;
-    const jitter = Math.min(cellW, cellH) * 0.28;
-
-    const points = [];
-    for (let r = 0; r <= rows; r++) {
-        const row = [];
-        for (let c = 0; c <= cols; c++) {
-            const edge = c === 0 || c === cols || r === 0 || r === rows;
-            const jx = edge ? 0 : (hash2(c, r, seed) - 0.5) * 2 * jitter;
-            const jy = edge ? 0 : (hash2(c, r, seed + 100) - 0.5) * 2 * jitter;
-            row.push({ x: -w / 2 + c * cellW + jx, y: -h / 2 + r * cellH + jy });
-        }
-        points.push(row);
-    }
-
-    const cells = [];
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            cells.push([
-                points[r][c],
-                points[r][c + 1],
-                points[r + 1][c + 1],
-                points[r + 1][c],
-            ]);
-        }
-    }
-    return cells;
-}
-
-/** Dust puff sprite pool, used when a stone breaks. */
-export function bakeDust() {
-    return [3, 5, 7].map((size) => {
-        const s = makeCanvas(size, size);
-        poly(
-            s.ctx,
-            [
-                [0, size / 2],
-                [size / 2, 0],
-                [size, size / 2],
-                [size / 2, size],
-            ],
-            '#b9b3a4',
-        );
-        return s;
-    });
 }

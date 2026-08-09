@@ -60,6 +60,36 @@ export const P = {
     lamp: '#ffeab4',
     ember: '#ff9d5c',
 
+    // Shop materials. Each is a full ramp because the shop's whole conceit is
+    // that you can tell what a thing is made of *before* you throw it — glass
+    // has to look brittle and gold has to look heavy.
+    glassLit: '#dcefff',
+    glass: '#8fc4ea',
+    glassDark: '#5384b8',
+    glassDeep: '#33547f',
+
+    goldLit: '#ffe9a0',
+    gold: '#e5ab3c',
+    goldDark: '#a97220',
+    goldDeep: '#6d4512',
+
+    ironLit: '#9aa0b0',
+    iron: '#6b7183',
+    ironDark: '#454a5c',
+    ironDeep: '#2b2f3d',
+
+    orbLit: '#e2c8ff',
+    orb: '#9a6adb',
+    orbDark: '#5f3a9a',
+    orbDeep: '#331e58',
+
+    popLit: '#fff6d8',
+    pop: '#f0dfae',
+    popDark: '#cdb27a',
+
+    skin: '#e8b489',
+    skinDark: '#b57e58',
+
     // Ink / outline / neutrals. The outline colour is a warm near-black; a pure
     // black outline is what makes pixel art look cheap.
     outline: '#2e2333',

@@ -5,11 +5,13 @@
       class="scene-canvas"
       :class="{ 'is-pointing': !!hovered }"
       @pointermove="onMove"
-      @pointerleave="hovered = null"
+      @pointerup="onUp"
+      @pointercancel="onUp"
+      @pointerleave="onUp"
       @pointerdown="onDown"
+      @wheel="onWheel"
     ></canvas>
 
-    <p class="hint">Click a building to enter. The graveyard is the one with the hammer.</p>
   </div>
 </template>
 
@@ -17,47 +19,13 @@
 import { ref, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 import { useScene } from '../useScene.js';
+import { drawCameraOverlay } from '../backButton.js';
+import { createCameraInput } from '../cameraInput.js';
 import { bakeOverworld, OVERWORLD_W, OVERWORLD_H } from '../art/overworld.js';
 import { hitTest } from '../art/shared.js';
 import { P } from '../palette.js';
 import { rect, px, drawSway, drawSprite } from '../pixel.js';
-
-// 3x5 pixel font, enough for the building labels. Each glyph is 3 columns of
-// 5 bits, low bit at the top — drawing text as sprites keeps it on the pixel
-// grid, where canvas fillText would antialias and break the illusion.
-const GLYPHS = {
-  A: [0b11111, 0b00101, 0b11111], B: [0b11111, 0b10101, 0b01010],
-  C: [0b01110, 0b10001, 0b10001], D: [0b11111, 0b10001, 0b01110],
-  E: [0b11111, 0b10101, 0b10101], F: [0b11111, 0b00101, 0b00101],
-  G: [0b01110, 0b10001, 0b11101], H: [0b11111, 0b00100, 0b11111],
-  I: [0b10001, 0b11111, 0b10001], J: [0b11000, 0b10000, 0b11111],
-  K: [0b11111, 0b00100, 0b11011], L: [0b11111, 0b10000, 0b10000],
-  M: [0b11111, 0b00010, 0b11111], N: [0b11111, 0b00110, 0b11111],
-  O: [0b01110, 0b10001, 0b01110], P: [0b11111, 0b00101, 0b00010],
-  Q: [0b01110, 0b11001, 0b11110], R: [0b11111, 0b00101, 0b11010],
-  S: [0b10010, 0b10101, 0b01001], T: [0b00001, 0b11111, 0b00001],
-  U: [0b01111, 0b10000, 0b01111], V: [0b00111, 0b11000, 0b00111],
-  W: [0b11111, 0b01000, 0b11111], X: [0b11011, 0b00100, 0b11011],
-  Y: [0b00011, 0b11100, 0b00011], Z: [0b11001, 0b10101, 0b10011],
-  ' ': [0, 0, 0],
-};
-
-function textWidth(text) {
-  return text.length * 4 - 1;
-}
-
-function drawText(ctx, text, x, y, color) {
-  let cursor = x;
-  for (const char of text.toUpperCase()) {
-    const glyph = GLYPHS[char] ?? GLYPHS[' '];
-    glyph.forEach((column, cx) => {
-      for (let row = 0; row < 5; row++) {
-        if (column & (1 << row)) rect(ctx, cursor + cx, y + row, 1, 1, color);
-      }
-    });
-    cursor += 4;
-  }
-}
+import { drawText, textWidth } from '../text.js';
 
 export default {
   name: 'OverworldScene',
@@ -84,18 +52,28 @@ export default {
 
     function onMove(event) {
       if (leaving) return;
+      if (cameraInput.move(event)) {
+        hovered.value = null;
+        return;
+      }
       const { x, y } = toVirtual(event);
       hovered.value = pick(x, y);
     }
 
     function onDown(event) {
       if (leaving) return;
+      if (cameraInput.pressOverlay(event)) return;
       const { x, y } = toVirtual(event);
       const target = pick(x, y);
       if (target) {
         leaving = target;
         hovered.value = null;
-      }
+      } else cameraInput.startPan(event);
+    }
+
+    function onUp() {
+      cameraInput.end();
+      hovered.value = null;
     }
 
     function update(dt) {
@@ -227,17 +205,23 @@ export default {
         rect(ctx, 0, 0, OVERWORLD_W, OVERWORLD_H, '#000');
         ctx.globalAlpha = 1;
       }
+
     }
 
-    const { canvasRef, toVirtual } = useScene({
+    const scene = useScene({
       width: OVERWORLD_W,
       height: OVERWORLD_H,
       background: P.ink,
       update,
       draw,
+      drawOverlay: drawCameraOverlay,
     });
+    const { canvasRef, toVirtual } = scene;
+    const cameraInput = createCameraInput(scene);
 
-    return { canvasRef, hovered, onMove, onDown };
+    const onWheel = (event) => cameraInput.wheel(event);
+
+    return { canvasRef, hovered, onMove, onDown, onUp, onWheel };
   },
 };
 </script>
@@ -260,16 +244,4 @@ export default {
   cursor: pointer;
 }
 
-.hint {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 12px;
-  margin: 0;
-  text-align: center;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.45);
-  pointer-events: none;
-}
 </style>

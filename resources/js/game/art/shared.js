@@ -56,6 +56,101 @@ export function makeHighlight(sprite, outlineColor = '#ffe9a8', lighten = 0.22) 
     return { canvas: out.canvas, w: out.w, h: out.h, pad };
 }
 
+// ---------------------------------------------------------------------------
+// Breaking things
+// ---------------------------------------------------------------------------
+
+/**
+ * Split a w x h sprite into convex chunks over a jittered grid.
+ *
+ * The grid's *vertices* are jittered rather than each cell independently, so
+ * neighbouring chunks share exact corners — the pieces still fit together like
+ * a broken stone instead of leaving gaps. Cells stay convex (matter needs that
+ * without poly-decomp) because the jitter is well under half a cell.
+ */
+export function shatterCells(w, h, cols, rows, seed, jitterScale = 0.28) {
+    const cellW = w / cols;
+    const cellH = h / rows;
+    const jitter = Math.min(cellW, cellH) * jitterScale;
+
+    const points = [];
+    for (let r = 0; r <= rows; r++) {
+        const row = [];
+        for (let c = 0; c <= cols; c++) {
+            const edge = c === 0 || c === cols || r === 0 || r === rows;
+            const jx = edge ? 0 : (hash2(c, r, seed) - 0.5) * 2 * jitter;
+            const jy = edge ? 0 : (hash2(c, r, seed + 100) - 0.5) * 2 * jitter;
+            row.push({ x: -w / 2 + c * cellW + jx, y: -h / 2 + r * cellH + jy });
+        }
+        points.push(row);
+    }
+
+    const cells = [];
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            cells.push([
+                points[r][c],
+                points[r][c + 1],
+                points[r + 1][c + 1],
+                points[r + 1][c],
+            ]);
+        }
+    }
+    return cells;
+}
+
+/**
+ * What fraction of a shatter cell actually has sprite in it.
+ *
+ * Chunks are drawn by clipping to their polygon and blitting the whole sprite
+ * behind it, so a cell over a transparent corner produces an invisible chunk
+ * that still collides — a round item like the orb ends up bouncing off thin
+ * air. Cells under the threshold get dropped instead. Sampled on a coarse grid
+ * because this runs at the moment of the break.
+ */
+export function cellCoverage(sprite, cell) {
+    const { data } = sprite.ctx.getImageData(0, 0, sprite.w, sprite.h);
+    let inside = 0;
+    let opaque = 0;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const p of cell) {
+        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+    }
+
+    // Cell coords are centred on the sprite; shift into image space.
+    for (let y = Math.floor(minY); y <= Math.ceil(maxY); y++) {
+        for (let x = Math.floor(minX); x <= Math.ceil(maxX); x++) {
+            const ix = Math.floor(x + sprite.w / 2);
+            const iy = Math.floor(y + sprite.h / 2);
+            if (ix < 0 || iy < 0 || ix >= sprite.w || iy >= sprite.h) continue;
+            inside++;
+            if (data[(iy * sprite.w + ix) * 4 + 3] > 8) opaque++;
+        }
+    }
+
+    return inside === 0 ? 0 : opaque / inside;
+}
+
+/** Dust puff sprite pool, thrown when something breaks. */
+export function bakeDust(color = '#b9b3a4') {
+    return [3, 5, 7].map((size) => {
+        const s = makeCanvas(size, size);
+        poly(
+            s.ctx,
+            [
+                [0, size / 2],
+                [size / 2, 0],
+                [size, size / 2],
+                [size / 2, size],
+            ],
+            color,
+        );
+        return s;
+    });
+}
+
 /**
  * A 3/4-view building box: front wall, receding right wall, and a hipped roof
  * drawn as stacked shrinking rows so its slopes land on the pixel staircase.

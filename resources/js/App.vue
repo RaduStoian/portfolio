@@ -1,8 +1,11 @@
 <template>
-  <div class="site">
+  <SoundControl />
+  <RouterView v-if="isFullscreen" />
+
+  <div v-else class="site">
     <Nav v-if="!isFullscreen" />
 
-    <main :class="isFullscreen ? 'site-scene' : 'site-main'">
+    <main class="site-main">
       <RouterView />
     </main>
 
@@ -13,10 +16,11 @@
 <script>
 import Nav from './vue/nav.vue';
 import Footer from './vue/footer.vue';
+import SoundControl from './game/SoundControl.vue';
 
 export default {
   name: 'Portfolio',
-  components: { Nav, Footer },
+  components: { Nav, Footer, SoundControl },
   computed: {
     isFullscreen() {
       return !!this.$route.meta.fullscreen;
@@ -76,12 +80,6 @@ a {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-/* Game scenes position themselves fixed and own the viewport, so the wrapper
-   must not add layout of its own. */
-.site-scene {
-  flex: 1;
 }
 
 .site-main {

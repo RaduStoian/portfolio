@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Overworld from '../game/scenes/overworld.vue';
 import Graveyard from '../game/scenes/graveyard.vue';
-import About from '../vue/pages/about.vue';
+import Shop from '../game/scenes/shop.vue';
+import Career from '../game/scenes/career.vue';
+import House from '../game/scenes/house.vue';
 import Projects from '../vue/pages/projects.vue';
 import Contact from '../vue/pages/contact.vue';
 import NotFound from '../vue/pages/not-found.vue';
@@ -14,9 +16,13 @@ export default createRouter({
     routes: [
         { path: '/', component: Overworld, meta: { fullscreen: true } },
         { path: '/graveyard', component: Graveyard, meta: { fullscreen: true } },
-        { path: '/projects', component: Projects },
-        { path: '/career', component: About },
-        { path: '/about', component: About },
+        // /projects is the shop scene; the plain database-backed list lives one
+        // level down, linked from the shop's HUD, so the game is the front door
+        // but the readable version is still one click away.
+        { path: '/projects', component: Shop, meta: { fullscreen: true } },
+        { path: '/projects/list', component: Projects },
+        { path: '/career', component: Career, meta: { fullscreen: true } },
+        { path: '/about', component: House, meta: { fullscreen: true } },
         { path: '/contact', component: Contact },
         // Catch-all — must stay last. Client-side only (web.php serves the
         // SPA shell with a 200 for every path), so it fixes the UX but not
