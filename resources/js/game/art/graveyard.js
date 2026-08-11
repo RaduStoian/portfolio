@@ -430,15 +430,16 @@ export function bakeGraveKeeper() {
 /** Compact speech bubble with its tail aimed down-right at the keeper. */
 export function bakeGraveBubble(lines) {
     const label = Array.isArray(lines) ? lines : [lines];
+    const lineH = 8; // 6px glyph + 2px gap between lines
     const w = Math.max(...label.map(textWidth)) + 8;
-    const bodyH = 4 + label.length * 7;
+    const bodyH = 4 + label.length * lineH;
     const s = makeCanvas(w, bodyH + 4);
     const { ctx } = s;
     rect(ctx, 0, 0, w, bodyH, P.ink);
     rect(ctx, 1, 1, w - 2, bodyH - 2, '#f4efe0');
     poly(ctx, [[w - 10, bodyH - 1], [w - 4, bodyH - 1], [w - 6, bodyH + 3]], P.ink);
     poly(ctx, [[w - 9, bodyH - 1], [w - 5, bodyH - 1], [w - 6, bodyH + 1]], '#f4efe0');
-    label.forEach((line, i) => drawText(ctx, line, 4, 3 + i * 7, P.ink));
+    label.forEach((line, i) => drawText(ctx, line, 4, 3 + i * lineH, P.ink));
     return s;
 }
 

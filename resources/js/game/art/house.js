@@ -325,12 +325,13 @@ export function bakeCatTailFrames() {
 
 export function bakeHouseBubble(text) {
     const w = textWidth(text) + 8;
-    const s = makeCanvas(w, 13);
+    const bodyH = 4 + 6 + 3; // top pad + glyph height + bottom pad
+    const s = makeCanvas(w, bodyH + 4);
     const { ctx } = s;
-    rect(ctx, 0, 0, w, 10, P.ink);
-    rect(ctx, 1, 1, w - 2, 8, '#f4efe0');
-    poly(ctx, [[w / 2 - 2, 9], [w / 2 + 3, 9], [w / 2, 12]], P.ink);
-    drawText(ctx, text, 4, 3, P.ink);
+    rect(ctx, 0, 0, w, bodyH, P.ink);
+    rect(ctx, 1, 1, w - 2, bodyH - 2, '#f4efe0');
+    poly(ctx, [[w / 2 - 2, bodyH - 1], [w / 2 + 3, bodyH - 1], [w / 2, bodyH + 3]], P.ink);
+    drawText(ctx, text, 4, 4, P.ink);
     return s;
 }
 

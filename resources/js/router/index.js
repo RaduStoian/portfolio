@@ -4,6 +4,7 @@ import Graveyard from '../game/scenes/graveyard.vue';
 import Shop from '../game/scenes/shop.vue';
 import Career from '../game/scenes/career.vue';
 import House from '../game/scenes/house.vue';
+import HouseDiorama from '../diorama/scenes/house.vue';
 import Projects from '../vue/pages/projects.vue';
 import Contact from '../vue/pages/contact.vue';
 import NotFound from '../vue/pages/not-found.vue';
@@ -23,6 +24,10 @@ export default createRouter({
         { path: '/projects/list', component: Projects },
         { path: '/career', component: Career, meta: { fullscreen: true } },
         { path: '/about', component: House, meta: { fullscreen: true } },
+        // Style-comparison spike: the same room drawn with the diorama
+        // engine (resources/js/diorama/) instead of the pixel one. Not
+        // linked from the site nav — visit directly to compare.
+        { path: '/about-diorama', component: HouseDiorama, meta: { fullscreen: true } },
         { path: '/contact', component: Contact },
         // Catch-all — must stay last. Client-side only (web.php serves the
         // SPA shell with a 200 for every path), so it fixes the UX but not

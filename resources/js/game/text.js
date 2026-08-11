@@ -1,37 +1,80 @@
-// A 3x5 pixel font, drawn as sprites rather than with canvas `fillText`.
+// A 4x6 pixel font, drawn as sprites rather than with canvas `fillText`.
 //
 // fillText antialiases and hints, which puts grey half-pixels on the grid and
-// instantly breaks the illusion at a 3-6x upscale. Each glyph here is 3 columns
-// of 5 bits, low bit at the top, so a letter is literally 15 decisions.
+// instantly breaks the illusion at a 3-6x upscale. Each glyph is written here
+// as its own 6-row grid so the shape is readable straight from the source —
+// no bit-twiddling required to see or edit a letter. This engine never
+// smooths a glyph edge, so "smaller but still detailed" can't come from
+// rendering the same grid at a fractional pixel size (that's just blur by
+// another name) — it has to come from a tighter grid. 4x6 is one column and
+// one row past the original 3x5: just enough for round letters (O/C/S/G) to
+// get a flat-ish top/bottom instead of a single-pixel apex, without the
+// footprint growing much past the original.
+
+export const GLYPH_W = 4;
+export const GLYPH_H = 6;
 
 export const GLYPHS = {
-    A: [0b11111, 0b00101, 0b11111], B: [0b11111, 0b10101, 0b01010],
-    C: [0b01110, 0b10001, 0b10001], D: [0b11111, 0b10001, 0b01110],
-    E: [0b11111, 0b10101, 0b10101], F: [0b11111, 0b00101, 0b00101],
-    G: [0b01110, 0b10001, 0b11101], H: [0b11111, 0b00100, 0b11111],
-    I: [0b10001, 0b11111, 0b10001], J: [0b11000, 0b10000, 0b11111],
-    K: [0b11111, 0b00100, 0b11011], L: [0b11111, 0b10000, 0b10000],
-    M: [0b11111, 0b00010, 0b11111], N: [0b11111, 0b00110, 0b11111],
-    O: [0b01110, 0b10001, 0b01110], P: [0b11111, 0b00101, 0b00010],
-    Q: [0b01110, 0b11001, 0b11110], R: [0b11111, 0b00101, 0b11010],
-    S: [0b10010, 0b10101, 0b01001], T: [0b00001, 0b11111, 0b00001],
-    U: [0b01111, 0b10000, 0b01111], V: [0b00111, 0b11000, 0b00111],
-    W: [0b11111, 0b01000, 0b11111], X: [0b11011, 0b00100, 0b11011],
-    Y: [0b00011, 0b11100, 0b00011], Z: [0b11001, 0b10101, 0b10011],
-    '0': [0b11111, 0b10001, 0b11111], '1': [0b10010, 0b11111, 0b10000],
-    '2': [0b11101, 0b10101, 0b10111], '3': [0b10101, 0b10101, 0b11111],
-    '4': [0b00111, 0b00100, 0b11111], '5': [0b10111, 0b10101, 0b11101],
-    '6': [0b11111, 0b10101, 0b11101], '7': [0b00001, 0b11101, 0b00011],
-    '8': [0b11111, 0b10101, 0b11111], '9': [0b10111, 0b10101, 0b11111],
-    '!': [0b00000, 0b10111, 0b00000], '.': [0b00000, 0b10000, 0b00000],
-    '-': [0b00100, 0b00100, 0b00100], "'": [0b00000, 0b00011, 0b00000],
-    ',': [0b00000, 0b11000, 0b00000],
-    ' ': [0, 0, 0],
+    A: ['.XX.', 'X..X', 'X..X', 'XXXX', 'X..X', 'X..X'],
+    B: ['XXX.', 'X..X', 'XXX.', 'X..X', 'X..X', 'XXX.'],
+    C: ['.XXX', 'X...', 'X...', 'X...', 'X...', '.XXX'],
+    D: ['XXX.', 'X..X', 'X..X', 'X..X', 'X..X', 'XXX.'],
+    E: ['XXXX', 'X...', 'XXX.', 'X...', 'X...', 'XXXX'],
+    F: ['XXXX', 'X...', 'XXX.', 'X...', 'X...', 'X...'],
+    G: ['.XXX', 'X...', 'X.XX', 'X..X', 'X..X', '.XXX'],
+    H: ['X..X', 'X..X', 'XXXX', 'X..X', 'X..X', 'X..X'],
+    I: ['X...', 'X...', 'X...', 'X...', 'X...', 'X...'],
+    J: ['..XX', '...X', '...X', '...X', 'X..X', '.XX.'],
+    K: ['X..X', 'X.X.', 'XX..', 'X.X.', 'X.X.', 'X..X'],
+    L: ['X...', 'X...', 'X...', 'X...', 'X...', 'XXXX'],
+    M: ['X..X', 'XXXX', 'X..X', 'X..X', 'X..X', 'X..X'],
+    N: ['X..X', 'XX.X', 'X.XX', 'X..X', 'X..X', 'X..X'],
+    O: ['.XX.', 'X..X', 'X..X', 'X..X', 'X..X', '.XX.'],
+    P: ['XXX.', 'X..X', 'X..X', 'XXX.', 'X...', 'X...'],
+    Q: ['.XX.', 'X..X', 'X..X', 'X..X', 'X.X.', '.XXX'],
+    R: ['XXX.', 'X..X', 'X..X', 'XXX.', 'X.X.', 'X..X'],
+    S: ['.XXX', 'X...', '.XX.', '...X', '...X', 'XXX.'],
+    T: ['XXXX', '.X..', '.X..', '.X..', '.X..', '.X..'],
+    U: ['X..X', 'X..X', 'X..X', 'X..X', 'X..X', '.XX.'],
+    V: ['X..X', 'X..X', 'X..X', 'X..X', '.XX.', '.X..'],
+    W: ['X..X', 'X..X', 'X..X', 'X.XX', 'XX.X', 'X..X'],
+    X: ['X..X', 'X..X', '.XX.', '.XX.', 'X..X', 'X..X'],
+    Y: ['X..X', 'X..X', '.XX.', '.X..', '.X..', '.X..'],
+    Z: ['XXXX', '...X', '..X.', '.X..', 'X...', 'XXXX'],
+    '0': ['.XX.', 'X..X', 'X.XX', 'XX.X', 'X..X', '.XX.'],
+    '1': ['.X..', 'XX..', '.X..', '.X..', '.X..', 'XXX.'],
+    '2': ['.XX.', 'X..X', '...X', '..X.', '.X..', 'XXXX'],
+    '3': ['.XX.', 'X..X', '..X.', '...X', 'X..X', '.XX.'],
+    '4': ['..X.', '.XX.', 'X.X.', 'XXXX', '..X.', '..X.'],
+    '5': ['XXXX', 'X...', 'XXX.', '...X', 'X..X', '.XX.'],
+    '6': ['.XX.', 'X...', 'XXX.', 'X..X', 'X..X', '.XX.'],
+    '7': ['XXXX', '...X', '..X.', '.X..', '.X..', '.X..'],
+    '8': ['.XX.', 'X..X', '.XX.', 'X..X', 'X..X', '.XX.'],
+    '9': ['.XX.', 'X..X', 'X..X', '.XXX', '...X', '.XX.'],
+    '!': ['.X..', '.X..', '.X..', '.X..', '....', '.X..'],
+    '.': ['....', '....', '....', '....', '....', '.XX.'],
+    '-': ['....', '....', 'XXXX', '....', '....', '....'],
+    "'": ['.X..', '.X..', '....', '....', '....', '....'],
+    ',': ['....', '....', '....', '....', '.X..', 'X...'],
+    ' ': ['....', '....', '....', '....', '....', '....'],
 };
 
-/** Advance is 4px per glyph (3 wide + 1 gap); the trailing gap isn't counted. */
+/**
+ * Per-character advance override, for the rare glyph whose ink doesn't fill
+ * the 4px box — I is a single 1px stroke, so advancing the full 5px like a
+ * boxy letter left a visibly wider gap after it than after anything else.
+ */
+const ADVANCE_OVERRIDES = { I: 2 };
+
+function advanceFor(char) {
+    return ADVANCE_OVERRIDES[char] ?? GLYPH_W + 1;
+}
+
+/** Advance is 5px per glyph (4 wide + 1 gap) by default; the trailing gap isn't counted. */
 export function textWidth(text) {
-    return text.length * 4 - 1;
+    let w = 0;
+    for (const char of text.toUpperCase()) w += advanceFor(char);
+    return w - 1;
 }
 
 export function drawText(ctx, text, x, y, color) {
@@ -39,12 +82,13 @@ export function drawText(ctx, text, x, y, color) {
     let cursor = x;
     for (const char of text.toUpperCase()) {
         const glyph = GLYPHS[char] ?? GLYPHS[' '];
-        glyph.forEach((column, cx) => {
-            for (let row = 0; row < 5; row++) {
-                if (column & (1 << row)) ctx.fillRect((cursor + cx) | 0, (y + row) | 0, 1, 1);
+        for (let row = 0; row < GLYPH_H; row++) {
+            const line = glyph[row];
+            for (let col = 0; col < GLYPH_W; col++) {
+                if (line[col] === 'X') ctx.fillRect((cursor + col) | 0, (y + row) | 0, 1, 1);
             }
-        });
-        cursor += 4;
+        }
+        cursor += advanceFor(char);
     }
 }
 
@@ -90,11 +134,12 @@ export function drawSwirlyText(ctx, text, cx, y, t, colorA, colorB) {
         const bob = Math.round(Math.sin(t * 3.1 + i * 0.9) * 1.4);
         const color = Math.sin(t * 5 + i * 1.7) > 0.15 ? colorA : colorB;
         ctx.fillStyle = color;
-        glyph.forEach((column, gx) => {
-            for (let row = 0; row < 5; row++) {
-                if (column & (1 << row)) ctx.fillRect((cursor + gx) | 0, (y + row + bob) | 0, 1, 1);
+        for (let row = 0; row < GLYPH_H; row++) {
+            const line = glyph[row];
+            for (let col = 0; col < GLYPH_W; col++) {
+                if (line[col] === 'X') ctx.fillRect((cursor + col) | 0, (y + row + bob) | 0, 1, 1);
             }
-        });
-        cursor += 4;
+        }
+        cursor += advanceFor(upper[i]);
     }
 }

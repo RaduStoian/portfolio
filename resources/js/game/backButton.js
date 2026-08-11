@@ -2,7 +2,7 @@ import { P } from './palette.js';
 import { rect, px } from './pixel.js';
 import { drawText } from './text.js';
 
-export const BACK_BUTTON = { x: 4, y: 4, w: 31, h: 12 };
+export const BACK_BUTTON = { x: 4, y: 4, w: 34, h: 12 };
 
 /** A tiny iron-and-gold plaque drawn on the same pixel grid as each scene. */
 export function drawBackButton(ctx) {

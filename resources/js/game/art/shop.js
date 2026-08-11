@@ -291,8 +291,9 @@ export function bakeShopkeeper() {
  */
 export function bakeBubble(lines) {
     const label = Array.isArray(lines) ? lines : [lines];
+    const lineH = 8; // 6px glyph + 2px gap between lines
     const w = Math.max(...label.map(textWidth)) + 8;
-    const bodyH = 4 + label.length * 7;
+    const bodyH = 4 + label.length * lineH;
     const h = bodyH + 4;
     const s = makeCanvas(w, h);
     const { ctx } = s;
@@ -302,7 +303,7 @@ export function bakeBubble(lines) {
     // Tail, pointing down-right towards the keeper.
     poly(ctx, [[w - 10, bodyH - 1], [w - 4, bodyH - 1], [w - 6, bodyH + 3]], P.ink);
     poly(ctx, [[w - 9, bodyH - 1], [w - 5, bodyH - 1], [w - 6, bodyH + 1]], '#f4efe0');
-    label.forEach((line, i) => drawText(ctx, line, 4, 3 + i * 7, P.ink));
+    label.forEach((line, i) => drawText(ctx, line, 4, 3 + i * lineH, P.ink));
 
     return s;
 }
@@ -329,7 +330,8 @@ export function bakePlinth(lines, { withLink = false } = {}) {
     const labelRegionW = Math.max(...label.map(textWidth)) + 8;
     const linkW = withLink ? 13 : 0;
     const w = labelRegionW + linkW;
-    const h = 5 + label.length * 6;
+    const lineH = 8; // 6px glyph + 2px gap between lines
+    const h = 5 + label.length * lineH;
     const s = makeCanvas(w, h);
     const { ctx } = s;
 
@@ -344,7 +346,7 @@ export function bakePlinth(lines, { withLink = false } = {}) {
     // the whole point of a plinth is that you can read what's on it.
     label.forEach((line, i) => {
         const x = Math.round((labelRegionW - textWidth(line)) / 2);
-        const y = 4 + i * 6;
+        const y = 4 + i * lineH;
         drawText(ctx, line, x, y + 1, P.woodDeep);
         drawText(ctx, line, x, y, P.goldLit);
     });
