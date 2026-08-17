@@ -2,7 +2,7 @@
   <div class="scene">
     <canvas ref="canvasRef" class="scene-canvas"></canvas>
     <button class="back" type="button" @click="goBack">&larr; Back</button>
-    <span class="tag">diorama style — compare with /about</span>
+    <span class="tag">diorama style. Compare with /about</span>
   </div>
 </template>
 

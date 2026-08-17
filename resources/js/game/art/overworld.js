@@ -13,7 +13,7 @@ const HORIZON = 96;
 // ---------------------------------------------------------------------------
 
 /**
- * Golden-hour sky. Stars are NOT baked in here — they're drawn per frame so
+ * Golden-hour sky. Stars are NOT baked in here. They're drawn per frame so
  * they can twinkle, and baking them would freeze them into the backdrop.
  */
 function bakeSky() {
@@ -67,7 +67,7 @@ function bakeHills(ctx) {
 
 /**
  * The plaza: a diamond of isometric tiles, plus a dirt path running off the
- * bottom of the frame. Deliberately *painted* — there's no grid data behind it
+ * bottom of the frame. Deliberately *painted*. There's no grid data behind it
  * and nothing walks on it. Adding a player character means redoing this.
  */
 function bakeGround(ctx) {
@@ -149,7 +149,7 @@ function bakeGround(ctx) {
 // Buildings
 // ---------------------------------------------------------------------------
 
-/** Projects — a timber workshop with a wide shutter door and a chimney. */
+/** Projects: a timber workshop with a wide shutter door and a chimney. */
 function bakeWorkshop() {
     const s = makeCanvas(74, 76);
     const { ctx } = s;
@@ -196,7 +196,7 @@ function bakeWorkshop() {
     return alphaMask(outlineSprite(s, P.outline));
 }
 
-/** Graveyard — a stone chapel with a lit archway and iron railings. */
+/** Graveyard: a stone chapel with a lit archway and iron railings. */
 function bakeChapel() {
     const s = makeCanvas(80, 84);
     const { ctx } = s;
@@ -260,7 +260,7 @@ function bakeChapel() {
     return alphaMask(outlineSprite(s, P.outline));
 }
 
-/** Career — a stone clock tower. */
+/** Career: a stone clock tower. */
 function bakeTower() {
     const s = makeCanvas(58, 98);
     const { ctx } = s;
@@ -286,7 +286,7 @@ function bakeTower() {
     windowPane(ctx, 14, oy - 28, 7, 9, P.stoneDeep, P.windowDim, P.windowDim);
     windowPane(ctx, 25, oy - 28, 7, 9, P.stoneDeep, P.window, P.windowWarm);
 
-    // Clock face. Hands are baked at a fixed time — the scene doesn't animate
+    // Clock face. Hands are baked at a fixed time. The scene doesn't animate
     // them, and a ticking clock would fight the frozen golden hour.
     for (let y = -7; y <= 7; y++) {
         for (let x = -7; x <= 7; x++) {
@@ -317,7 +317,7 @@ function bakeTower() {
     return alphaMask(outlineSprite(s, P.outline));
 }
 
-/** Me — a timber-framed cottage with a garden. */
+/** Me: a timber-framed cottage with a garden. */
 function bakeCottage() {
     const s = makeCanvas(68, 64);
     const { ctx } = s;
@@ -330,7 +330,7 @@ function bakeCottage() {
     });
     isoRoof(ctx, 6, oy - 22, 34, 16, 13, P.roofRed, P.roofRedDark);
 
-    // Exposed timber framing — the detail that makes it read as a cottage.
+    // Exposed timber framing: the detail that makes it read as a cottage.
     rect(ctx, 6, oy - 22, 34, 1, P.woodDark);
     rect(ctx, 6, oy - 12, 34, 1, P.woodDark);
     rect(ctx, 6, oy - 1, 34, 1, P.woodDark);
@@ -365,7 +365,7 @@ function bakeCottage() {
 
 /**
  * Contact shadow: a squashed, dithered ellipse. Without these the buildings
- * look pasted onto the plaza instead of standing on it — but they have to stay
+ * look pasted onto the plaza instead of standing on it, but they have to stay
  * subtle, an earlier version was so large and dark it read as a crater.
  */
 function bakeShadow(w) {
@@ -411,10 +411,10 @@ export function bakeOverworld() {
     const { wellX, wellY } = bakeGround(background.ctx);
 
     const defs = [
-        { id: 'projects', label: 'Projects', route: '/projects', sprite: bakeWorkshop(), x: 22, y: 62 },
-        { id: 'graveyard', label: 'Graveyard', route: '/graveyard', sprite: bakeChapel(), x: 108, y: 46 },
-        { id: 'career', label: 'Career', route: '/career', sprite: bakeTower(), x: 198, y: 34 },
-        { id: 'me', label: 'About Me', route: '/about', sprite: bakeCottage(), x: 248, y: 74 },
+        { id: 'projects', label: 'Projects', route: '/play/projects', sprite: bakeWorkshop(), x: 22, y: 62 },
+        { id: 'graveyard', label: 'Graveyard', route: '/play/graveyard', sprite: bakeChapel(), x: 108, y: 46 },
+        { id: 'career', label: 'Career', route: '/play/career', sprite: bakeTower(), x: 198, y: 34 },
+        { id: 'me', label: 'About Me', route: '/play/about', sprite: bakeCottage(), x: 248, y: 74 },
     ];
 
     const buildings = defs.map((def) => ({

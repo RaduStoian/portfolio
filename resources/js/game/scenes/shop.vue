@@ -14,7 +14,7 @@
 
     <div class="hud">
       <button type="button" class="btn" @click="reset">Restock</button>
-      <RouterLink to="/projects/list" class="btn">Read the details</RouterLink>
+      <RouterLink to="/projects" class="btn">Read the details</RouterLink>
       <span class="tally">{{ broken }} broken</span>
     </div>
   </div>
@@ -41,7 +41,7 @@ import {
 
 // What the shopkeeper says about each project, read out when you click its
 // nameplate or pick up the object itself. Wrapped to a fixed width once, at
-// setup, rather than per-frame — the text never changes at runtime.
+// setup, rather than per-frame. The text never changes at runtime.
 const DESCRIPTIONS = {
   mindstare: 'A free visual meditation site to manage your moods and calm your mind.',
   vhoice: 'Vhoice.net: rate and review your politicians, with comments from real people.',
@@ -56,7 +56,7 @@ const SPEECH_WIDTH = 108;
 
 const { Engine, Composite, Bodies, Body, Constraint, Events, Vector, Vertices } = Matter;
 
-// Small words that belong to a scrying orb — short enough that all ten fit the
+// Small words that belong to a scrying orb. Short enough that all ten fit the
 // same swirly banner over Mindstare.
 const VISION_WORDS = ['GAZE', 'LEARN', 'STARE', 'GROW', 'SIT', 'SEE', 'KNOW', 'WISE', 'PEER', 'DREAM'];
 
@@ -65,7 +65,7 @@ const VISION_WORDS = ['GAZE', 'LEARN', 'STARE', 'GROW', 'SIT', 'SEE', 'KNOW', 'W
  * step, relative) at which it gives up; for scale, dropping something from the
  * top shelf to the floor lands at roughly 7. So glass can't survive the floor
  * and gold survives everything short of a hard throw or the anvil. Crystal
- * shares glass's feel — brittle friction, glassy bounce — but never actually
+ * shares glass's feel. Brittle friction, glassy bounce, but never actually
  * breaks: Mindstare is meant to be handled, not protected. Paper, iron and
  * wood never break either, and express themselves differently instead (the
  * bag spills, the anvil breaks *other* things, the chest erupts).
@@ -109,7 +109,7 @@ export default {
       wood: bakeDust('#b08a5e'),
     };
 
-    // One speech bubble per project, wrapped and baked once — the text never
+    // One speech bubble per project, wrapped and baked once. The text never
     // changes, so there's no reason to wrap or draw it per frame.
     const speechBubbles = Object.fromEntries(
       Object.entries(DESCRIPTIONS).map(([id, text]) => [id, bakeBubble(wrapText(text, SPEECH_WIDTH))]),
@@ -266,14 +266,14 @@ export default {
 
     // --- the anvil -----------------------------------------------------------
     // Unlabelled, not one of the displays: ForgeKit's plinth belongs to the
-    // forge now, and the anvil sits directly on the floorboards beside it —
+    // forge now, and the anvil sits directly on the floorboards beside it,
     // lower than a plinth would put it, which is exactly what gives the
     // hammer room to swing. Still a real dynamic body, so it's draggable and
     // still smashes whatever it lands on hard enough.
     //
     // Its collider is a compound built from the exact same rectangles
     // `bakeAnvil` painted (ANVIL_PARTS in art/shop.js), so it hugs the horn
-    // and waist instead of a bounding box that's mostly empty air — which is
+    // and waist instead of a bounding box that's mostly empty air, which is
     // exactly what let you "grab" a rotated hammer from outside its own
     // silhouette before `grab.js` existed.
     let anvilBody = null;
@@ -288,7 +288,7 @@ export default {
       const body = Body.create({ parts });
       body.plugin = { kind: 'anvil' };
 
-      // Captured before the body is moved off (0,0) — the sprite's top-left
+      // Captured before the body is moved off (0,0). The sprite's top-left
       // in body-local space, so drawing is just translate+rotate however the
       // compound's true centre of mass (not necessarily the sprite's
       // midpoint) ends up landing.
@@ -303,7 +303,7 @@ export default {
     // --- the smith's hammer -------------------------------------------------
     // A real physics object, not a scripted swing: you pick it up and hit the
     // anvil yourself. Built the same way the graveyard builds its
-    // sledgehammer — a compound of head + handle — so `grab.js` can find the
+    // sledgehammer. A compound of head + handle, so `grab.js` can find the
     // exact point on it you clicked, handle included.
     let smithHammer = null;
     let smithHammerOffset = { x: 0, y: 0 };
@@ -318,7 +318,7 @@ export default {
       body.plugin = { kind: 'smithHammer', headId: head.id };
 
       // The sprite's head sits at sprite-x = HAMMER_HANDLE_LEN + HEAD_W/2 (see
-      // bakeSmithHammer), which is body-local (0,0) here — so the sprite's
+      // bakeSmithHammer), which is body-local (0,0) here, so the sprite's
       // top-left in body-local space is *behind* the head by the full handle
       // length, not by half of it.
       smithHammerOffset = {
@@ -345,9 +345,9 @@ export default {
 
     // --- project links -------------------------------------------------------
     // A small glowing arrow set into each plinth right after its label, so
-    // the physical toy isn't the only way to reach a project — clicking it
+    // the physical toy isn't the only way to reach a project. Clicking it
     // opens the real writeup in a new tab. `urls` fills in asynchronously
-    // from the same API the plain /projects/list page uses; a plinth with
+    // from the same API the plain /projects page uses; a plinth with
     // nothing to link to just never lights its arrow up.
     const urls = {};
     window.axios
@@ -359,7 +359,7 @@ export default {
         }
       })
       .catch(() => {
-        // No projects configured yet, or the request failed — the shop still
+        // No projects configured yet, or the request failed. The shop still
         // works as a toy, it just has no arrows to click.
       });
 
@@ -375,8 +375,8 @@ export default {
       .filter(Boolean);
 
     // --- loose junk --------------------------------------------------------
-    // Everything the shop can spit out — popcorn, the chest's payload, chunks
-    // of broken merchandise — lives in one list drawn the same way, so adding a
+    // Everything the shop can spit out. Popcorn, the chest's payload, chunks
+    // of broken merchandise. Lives in one list drawn the same way, so adding a
     // new kind of debris is one push.
     const MAX_DEBRIS = 240;
 
@@ -446,7 +446,7 @@ export default {
 
       for (const cell of cells) {
         // A cell over a transparent corner would be an invisible chunk that
-        // still collides — round things need this or they bounce off nothing.
+        // still collides. Round things need this or they bounce off nothing.
         if (cellCoverage(sprite, cell) < 0.3) continue;
 
         const centroid = Vertices.centre(cell.map((p) => ({ x: p.x, y: p.y })));
@@ -501,7 +501,7 @@ export default {
         // Spawned in a fan clear of the chest's own body. Stacking the whole
         // payload on one point inside the chest made the solver shove
         // everything apart at once and fire the chest across the room like a
-        // mortar — funny once, wrong every time after.
+        // mortar. Funny once, wrong every time after.
         const spread = ((i / Math.max(1, count - 1)) - 0.5) * 14;
         const from = Vector.add(
           item.body.position,
@@ -546,7 +546,7 @@ export default {
     // --- sparks --------------------------------------------------------------
     // Real bodies, not decoration: they bounce off the anvil, the floor, and
     // anything else in the room, and they can knock a fragile item hard enough
-    // to break it — the same generic collision handler below does that for
+    // to break it. The same generic collision handler below does that for
     // free, since a spark is just another dynamic body as far as it's
     // concerned. `life` is deliberately short; a real spark is gone in a blink.
     const SPARK_LIFE = [0.2, 0.4];
@@ -584,7 +584,7 @@ export default {
         const parentA = pair.bodyA.parent;
         const parentB = pair.bodyB.parent;
 
-        // The smith's hammer against the anvil, head only — a resting hammer
+        // The smith's hammer against the anvil, head only. A resting hammer
         // or a glancing blow from the handle shouldn't throw sparks. Same
         // pattern as the graveyard's hammer-vs-gravestone check.
         const hammerIsA = parentA === smithHammer;
@@ -679,7 +679,7 @@ export default {
 
       // The nameplate itself: plinths are static, so they're never in
       // `pickable()` and never reachable through grabAt. Clicking one just
-      // asks the keeper to talk — there's nothing to drag.
+      // asks the keeper to talk. There's nothing to drag.
       for (let i = 0; i < art.displays.length; i++) {
         const plinth = plinths[i];
         if (x >= plinth.x && x <= plinth.x + plinth.sprite.w && y >= plinth.y && y <= plinth.y + plinth.sprite.h) {
@@ -688,7 +688,7 @@ export default {
         }
       }
 
-      // `grabAt` tests real geometry, not bounding boxes — Matter's own
+      // `grabAt` tests real geometry, not bounding boxes. Matter's own
       // Query.point doesn't, so a click in the empty corner of a rotated
       // hammer's AABB used to "grab" it from a point outside its own shape and
       // it would hang and swing from thin air. This is also what lets you grab
@@ -704,7 +704,7 @@ export default {
         orbWord = VISION_WORDS[Math.floor(Math.random() * VISION_WORDS.length)];
       }
 
-      // Clicking the object itself is the other way to hear about it — same
+      // Clicking the object itself is the other way to hear about it. Same
       // trigger as the nameplate, just via the physical body instead of the
       // static plinth underneath it.
       if (body.plugin?.kind === 'item') {
@@ -722,7 +722,7 @@ export default {
         // A plain world-space offset, NOT rotated back by -body.angle. Matter
         // captures the body's angle at Constraint.create as its own internal
         // `angleB` and re-rotates pointB by the *change* in angle each solve
-        // step (see node_modules/matter-js/src/constraint/Constraint.js) — it
+        // step (see node_modules/matter-js/src/constraint/Constraint.js). It
         // already expects a world-oriented offset and updates it
         // incrementally from there. Pre-rotating here double-counted the
         // current angle: harmless near a body's centroid, but for a point far
@@ -792,7 +792,7 @@ export default {
       const speed = Vector.magnitude(item.body.velocity);
 
       item.spillTimer -= dt;
-      // Tipped past horizontal, or swung about — either way kernels leave.
+      // Tipped past horizontal, or swung about. Either way kernels leave.
       if ((tilt > 1.0 || speed > 2.2) && item.spillTimer <= 0) {
         burstBag(item, 1);
         item.spillTimer = 0.05 + Math.random() * 0.06;
@@ -834,7 +834,7 @@ export default {
 
     /**
      * A shower from the mouth at a random interval, with the ember glow
-     * flaring bright for the same beat — the two read as one event (the fire
+     * flaring bright for the same beat. The two read as one event (the fire
      * flaring up throws sparks) rather than two coincidental animations.
      */
     function updateForge(item, dt) {
@@ -878,12 +878,12 @@ export default {
 
         // Cap and bleed off spin on whatever's held, every substep rather than
         // once per rendered frame. The constraint pins an exact point on the
-        // body — grab.js guarantees that — but a light, off-centre object like
+        // body. Grab.js guarantees that, but a light, off-centre object like
         // the hammer has almost no rotational inertia against a spring
         // anchored near one end, so the torque from a single physics step can
         // spin it past 180° before it's even drawn once. By the time a
         // once-per-frame damping pass got a chance to act, the flip had
-        // already happened and rendered — from the outside it looked like the
+        // already happened and rendered. From the outside it looked like the
         // hammer swapped which end had the handle. Intervening inside the
         // substep loop stops the spin before Matter ever gets a second step to
         // build on it.
@@ -915,7 +915,7 @@ export default {
       }
 
       // The word stays lit for as long as the orb is held, and only starts
-      // counting down once you let go — a continuous look, not a click-timer.
+      // counting down once you let go. A continuous look, not a click-timer.
       const orb = items[orbIndex];
       if (orb?.alive && heldBody() === orb.body) orbWordTimer = ORB_WORD_FADE;
       else orbWordTimer = Math.max(0, orbWordTimer - dt);
@@ -997,7 +997,7 @@ export default {
         const halfW = sprite.w / 2;
         const halfH = sprite.h / 2;
 
-        // A small idle shiver — something's alive in there — only while it's
+        // A small idle shiver: something's alive in there. Only while it's
         // actually resting: not held, not mid-flight. A chest still tumbling
         // through the air shivering too would just read as jittery physics.
         const resting = heldBody() !== body && Vector.magnitude(body.velocity) < 0.4;
@@ -1049,7 +1049,7 @@ export default {
       if (keeperTimer > 0) {
         const bubble = keeperBubble;
         // Centred over the keeper's own head, not dragged left toward his
-        // hand — the alcove above him is open wall all the way to the
+        // hand. The alcove above him is open wall all the way to the
         // rafter, while the shelves are off to the left with their own
         // merchandise. A tall, narrow (SPEECH_WIDTH-wrapped) bubble fits that
         // space; a wide one used to reach clear across to the shelves.
@@ -1062,7 +1062,7 @@ export default {
       for (const plinth of plinths) ctx.drawImage(plinth.sprite.canvas, plinth.x, plinth.y);
 
       // Glowing arrows, set into each plinth right after its label. Only for
-      // projects that actually resolved to a URL — a small pulse to draw the
+      // projects that actually resolved to a URL. A small pulse to draw the
       // eye without shouting over the label next to it.
       for (const spot of linkSpots) {
         if (!urls[spot.id]) continue;
@@ -1161,7 +1161,7 @@ export default {
 
         // A whirlpool: motes spiralling inward and vanishing at the centre,
         // looping forever. It's what makes the orb bait a second look instead
-        // of just sitting there glowing — a fixed mote drifting in a circle
+        // of just sitting there glowing. A fixed mote drifting in a circle
         // reads as decoration, something visibly being *drawn in* reads as a
         // thing worth staring into.
         const orbR = orb.sprite.w / 2 - 2;

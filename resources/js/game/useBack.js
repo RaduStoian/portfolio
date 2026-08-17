@@ -6,6 +6,6 @@ export function useBack() {
 
     return () => {
         if (window.history.state?.back) router.back();
-        else router.push('/');
+        else router.push('/play');
     };
 }

@@ -175,7 +175,7 @@ export default {
     /**
      * Drop the hammer in already tilted and clear of the ground. Spawning it
      * upright and overlapping the floor made the solver shove it out and leave
-     * it balanced on its handle tip like a stood-up broom — stable, but it
+     * it balanced on its handle tip like a stood-up broom. Stable, but it
      * reads as floating. Falling from a lean settles it lying down.
      */
     function restHammer() {
@@ -297,7 +297,7 @@ export default {
 
       const candidates = [...chunks.map((c) => c.body), ...stones.filter((s) => s.alive).map((s) => s.body), hammer];
       // `grabAt` returns a point guaranteed to be on the body, so the hammer
-      // hangs from wherever you took hold of it — grab the end of the handle
+      // hangs from wherever you took hold of it. Grab the end of the handle
       // and it swings from the end of the handle. The hammer is last in the
       // list so it wins ties, which is what you meant when you clicked.
       const grab = grabAt(candidates, pointer, 7);
@@ -314,7 +314,7 @@ export default {
         // A plain world-space offset, NOT rotated back by -body.angle. Matter
         // captures the body's angle at Constraint.create as its own internal
         // `angleB` and re-rotates pointB by the *change* in angle each solve
-        // step (see Constraint.solve) — it already expects a world-oriented
+        // step (see Constraint.solve). It already expects a world-oriented
         // offset and updates it incrementally from there. Pre-rotating here
         // double-counted the current angle: harmless near the centroid, but
         // for a point far out on a tilted body (the sledgehammer rests at
@@ -387,12 +387,12 @@ export default {
 
         // Cap and bleed off spin on whatever's held, every substep rather than
         // once per rendered frame. The constraint pins an exact point on the
-        // body — grab.js guarantees that — but a light, off-centre object
+        // body. Grab.js guarantees that, but a light, off-centre object
         // like the sledgehammer has almost no rotational inertia against a
         // spring anchored near the handle tip, so the torque from a single
         // physics step can spin it past 180° before it's even drawn once. By
         // the time a once-per-frame damping pass got a chance to act, the
-        // flip had already happened and rendered — from the outside it looked
+        // flip had already happened and rendered. From the outside it looked
         // like the hammer swapped which end had the handle. Intervening
         // inside the substep loop stops the spin before Matter ever gets a
         // second step to build on it.

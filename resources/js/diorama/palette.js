@@ -1,5 +1,5 @@
 // Diorama palette: base hues only. Unlike game/palette.js, there are no
-// hand-authored light/dark ramp steps per material — shade variants are
+// hand-authored light/dark ramp steps per material. Shade variants are
 // derived at draw time by render.js's foldShade(), keyed off a fixed light
 // direction. One base color in, every facet tone out, so adding a new prop
 // never means inventing a new 4-step ramp by eye.
@@ -16,7 +16,7 @@ export const D = {
     windowGlow: '#ffdc8f',
     ink: '#2b2418',
 
-    // Night room — added for the diorama "about" scene.
+    // Night room: added for the diorama "about" scene.
     wallTop: '#241d38',
     wallBottom: '#3d3252',
     frame: '#6b5643',

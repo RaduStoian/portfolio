@@ -7,12 +7,12 @@ export const GRAVEYARD_W = 320;
 export const GRAVEYARD_H = 180;
 export const GROUND_Y = 148;
 
-/** Night sky, hills, bare trees and the far fence — everything non-physical. */
+/** Night sky, hills, bare trees and the far fence. Everything non-physical. */
 export function bakeBackdrop() {
     const s = makeCanvas(GRAVEYARD_W, GRAVEYARD_H);
     const { ctx } = s;
 
-    // Night, using the palette's night keys — same world as the overworld,
+    // Night, using the palette's night keys. Same world as the overworld,
     // hours later. Stars are drawn per frame by the scene so they can twinkle,
     // so nothing star-shaped is baked in here.
     bands(ctx, 0, 0, GRAVEYARD_W, GROUND_Y, [P.nightTop, P.nightTop, P.nightMid, P.nightLow, P.nightHorizon]);
@@ -68,7 +68,7 @@ export function bakeBackdrop() {
     rect(ctx, 0, GROUND_Y - 13, GRAVEYARD_W, 1, P.inkSoft);
     rect(ctx, 0, GROUND_Y - 6, GRAVEYARD_W, 1, P.inkSoft);
 
-    // Ground — the overworld's greens, dropped a step for moonlight.
+    // Ground: the overworld's greens, dropped a step for moonlight.
     rect(ctx, 0, GROUND_Y, GRAVEYARD_W, GRAVEYARD_H - GROUND_Y, P.grassDark);
     dither(ctx, 0, GROUND_Y, GRAVEYARD_W, 6, P.grassDeep, P.grassDark, 0.5);
     speckle(ctx, 0, GROUND_Y, GRAVEYARD_W, GRAVEYARD_H - GROUND_Y, P.grass, 0.07, 17);
@@ -84,7 +84,7 @@ export function bakeBackdrop() {
     }
 
     // A worn dirt trail between the graves. Its edges are eaten into by grass
-    // rather than being a clean silhouette — a solid brown wedge read as a
+    // rather than being a clean silhouette. A solid brown wedge read as a
     // shape sitting on the lawn instead of a path worn into it.
     for (let y = GROUND_Y + 6; y < GRAVEYARD_H; y++) {
         const t = (y - GROUND_Y - 6) / (GRAVEYARD_H - GROUND_Y - 6);
@@ -105,7 +105,7 @@ export function bakeBackdrop() {
 
 /**
  * Scenery for the graveyard. Bare, dead trees rather than the town's leafy
- * ones — same silhouette language, different mood.
+ * ones. Same silhouette language, different mood.
  */
 export function bakeGraveyardProps() {
     /**
@@ -270,7 +270,7 @@ export function bakeTorchGlow() {
 
 /**
  * A gravestone at true size. Three silhouettes so the row doesn't look cloned.
- * The sprite is the *only* source of the stone's look — when it shatters, each
+ * The sprite is the *only* source of the stone's look. When it shatters, each
  * chunk clips its own region out of this same canvas, so the crack lines run
  * through the carving exactly as they should.
  */

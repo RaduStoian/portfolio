@@ -241,7 +241,7 @@ export default {
       ctx.globalAlpha = 1;
 
       // Screen light is confined to the display and a narrow reflection on
-      // the desk top—no oversized glare rectangle below the monitor.
+      // the desk top, no oversized glare rectangle below the monitor.
       ctx.globalCompositeOperation = 'lighter';
       if (computerOn) {
         ctx.globalAlpha = 0.12 + Math.sin(t * 7) * 0.02;
@@ -259,7 +259,7 @@ export default {
       if (active && bubbleTimer > 0) {
         const bubble = bubbles[active.id];
         // The cat's own bubble sits a little further down-right than the
-        // shared default — nudged off the sleeping face beneath it.
+        // shared default. Nudged off the sleeping face beneath it.
         const nudge = active.id === 'cat' ? 6 : 0;
         const bx = Math.max(4, Math.min(active.x + active.w / 2 - bubble.w / 2, HOUSE_W - bubble.w - 4)) + nudge;
         const by = Math.max(5, active.y - bubble.h - 5) + nudge;

@@ -6,7 +6,7 @@ const { Bounds, Vector, Vertices } = Matter;
 //
 // Matter's own `Query.point` is not usable for this: it tests bounding boxes
 // only (`Query.region` under the hood), so clicking anywhere in a rotated
-// sledgehammer's AABB "hits" it — including the large empty corners. The
+// sledgehammer's AABB "hits" it, including the large empty corners. The
 // constraint then anchors at a point outside the shape and the hammer swings
 // around thin air. Everything here exists to make the grab point land on the
 // object you actually clicked, at the spot you actually clicked it.
@@ -47,7 +47,7 @@ function closestOnPolygon(vertices, point) {
  * Returns `{ body, point }` where `point` is guaranteed to lie on the body:
  * the click position when it's inside the shape, and the nearest point on the
  * surface when it's merely close. Grab a hammer by the end of its handle and
- * it hangs and swings from the end of its handle — which is the whole reason
+ * it hangs and swings from the end of its handle, which is the whole reason
  * this returns a point at all instead of just a body.
  *
  * `reach` is how far outside a shape a click still counts. A 3px handle is

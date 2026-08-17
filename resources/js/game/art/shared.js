@@ -22,7 +22,7 @@ export function hitTest(sprite, localX, localY) {
 /**
  * Build the hover version of a sprite: the art lightened slightly, plus a 1px
  * outline hugging its silhouette. Baked once at load rather than composited per
- * frame — the outline pass is a full O(w*h) neighbour scan.
+ * frame. The outline pass is a full O(w*h) neighbour scan.
  */
 export function makeHighlight(sprite, outlineColor = '#ffe9a8', lighten = 0.22) {
     const pad = 1;
@@ -64,7 +64,7 @@ export function makeHighlight(sprite, outlineColor = '#ffe9a8', lighten = 0.22) 
  * Split a w x h sprite into convex chunks over a jittered grid.
  *
  * The grid's *vertices* are jittered rather than each cell independently, so
- * neighbouring chunks share exact corners — the pieces still fit together like
+ * neighbouring chunks share exact corners. The pieces still fit together like
  * a broken stone instead of leaving gaps. Cells stay convex (matter needs that
  * without poly-decomp) because the jitter is well under half a cell.
  */
@@ -104,7 +104,7 @@ export function shatterCells(w, h, cols, rows, seed, jitterScale = 0.28) {
  *
  * Chunks are drawn by clipping to their polygon and blitting the whole sprite
  * behind it, so a cell over a transparent corner produces an invisible chunk
- * that still collides — a round item like the orb ends up bouncing off thin
+ * that still collides. A round item like the orb ends up bouncing off thin
  * air. Cells under the threshold get dropped instead. Sampled on a coarse grid
  * because this runs at the moment of the break.
  */
@@ -161,7 +161,7 @@ export function bakeDust(color = '#b9b3a4') {
 export function isoBox(ctx, ox, oy, bw, depth, bh, colors) {
     const dy = depth / 2;
 
-    // Right (shaded) wall — drawn first so the front wall overlaps its seam.
+    // Right (shaded) wall. Drawn first so the front wall overlaps its seam.
     poly(
         ctx,
         [
@@ -252,7 +252,7 @@ export function isoRoof(ctx, ox, oy, bw, depth, rh, roof, roofDark) {
 
     // Shingle courses on the front slope. The slope's edges move inward
     // linearly from eaves to ridge, so each course's span is exact rather than
-    // clipped — no stray pixels hanging off the roof.
+    // clipped. No stray pixels hanging off the roof.
     for (let step = 3; step < rh; step += 3) {
         const t = step / rh;
         const y = oy - step;

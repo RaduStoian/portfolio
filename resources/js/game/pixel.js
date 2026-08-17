@@ -36,7 +36,7 @@ export function outline(ctx, x, y, w, h, color) {
 }
 
 /**
- * Vertical gradient as discrete bands rather than a smooth ramp — a real
+ * Vertical gradient as discrete bands rather than a smooth ramp. A real
  * gradient would introduce thousands of colours and stop reading as pixel art.
  */
 export function bands(ctx, x, y, w, h, colors) {
@@ -69,7 +69,7 @@ export function dither(ctx, x, y, w, h, a, b, amount) {
 
 /**
  * Deterministic value noise keyed on integer coords. Used for scattering grass
- * tufts, stone speckle and star positions — deterministic so a re-bake looks
+ * tufts, stone speckle and star positions. Deterministic so a re-bake looks
  * identical rather than shimmering between reloads.
  */
 export function hash2(x, y, seed = 0) {
@@ -124,7 +124,7 @@ export function poly(ctx, points, color) {
 /**
  * Draw a sprite bending in the wind: each row is blitted with a horizontal
  * offset that grows towards the top, so the base stays planted and the crown
- * sways. This is how the trees, bushes and banners move — cheaper and more
+ * sways. This is how the trees, bushes and banners move. Cheaper and more
  * controllable than simulating them, and it keeps every pixel on the grid
  * because the offset is rounded per row.
  */

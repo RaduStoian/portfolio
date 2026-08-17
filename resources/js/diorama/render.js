@@ -1,5 +1,5 @@
 // Paper-diorama rendering primitives. Deliberately independent of
-// game/pixel.js — nothing here snaps to a pixel grid or disables smoothing.
+// game/pixel.js. Nothing here snaps to a pixel grid or disables smoothing.
 // A "diorama" is built from flat-shaded polygon facets whose tone is derived
 // from a surface normal and a fixed light direction, the way a folded-paper
 // model catches light differently on each plane. See palette.js for the
@@ -7,7 +7,7 @@
 
 import { LIGHT_DIR } from './palette.js';
 
-/** Deterministic 0..1 value from integer coords — same trick as the pixel engine's hash2, reimplemented here so this module has no import from it. */
+/** Deterministic 0..1 value from integer coords. Same trick as the pixel engine's hash2, reimplemented here so this module has no import from it. */
 export function hash2(x, y, seed = 0) {
     let h = (x | 0) * 374761393 + (y | 0) * 668265263 + seed * 1442695040888963407;
     h = (h ^ (h >>> 13)) * 1274126177;
@@ -39,7 +39,7 @@ function rgbToHex(r, g, b) {
 /**
  * Shade a base color for a facet with the given normal (unit-ish vector,
  * z toward the viewer). Dot product against LIGHT_DIR maps to a tone
- * multiplier — this is the one formula that replaces every hand-picked
+ * multiplier. This is the one formula that replaces every hand-picked
  * wallLit/wallDark pair in the pixel engine.
  */
 export function foldShade(hex, normal, { min = 0.55, max = 1.25 } = {}) {
@@ -55,7 +55,7 @@ export function foldShade(hex, normal, { min = 0.55, max = 1.25 } = {}) {
     return rgbToHex(r * mult, g * mult, b * mult);
 }
 
-/** A flat-shaded polygon facet — the base unit everything else composes from. */
+/** A flat-shaded polygon facet: the base unit everything else composes from. */
 export function panel(ctx, points, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -64,7 +64,7 @@ export function panel(ctx, points, color) {
     ctx.fill();
 }
 
-/** Soft seam between two facets meeting at a fold — a hint of shadow, not a hard line. */
+/** Soft seam between two facets meeting at a fold. A hint of shadow, not a hard line. */
 export function crease(ctx, x1, y1, x2, y2, color = '#000000', opacity = 0.18, width = 2) {
     ctx.save();
     ctx.globalAlpha = opacity;
@@ -78,7 +78,7 @@ export function crease(ctx, x1, y1, x2, y2, color = '#000000', opacity = 0.18, w
     ctx.restore();
 }
 
-/** Blurred contact shadow — what sells a diorama piece as sitting on a surface. */
+/** Blurred contact shadow: what sells a diorama piece as sitting on a surface. */
 export function ambientShadow(ctx, cx, cy, rx, ry, opacity = 0.22, blur = 10) {
     ctx.save();
     ctx.filter = `blur(${blur}px)`;
@@ -104,7 +104,7 @@ export function glow(ctx, cx, cy, r, color, opacity = 0.9) {
 }
 
 /**
- * Run a draw callback with a native canvas drop shadow applied — the "cut
+ * Run a draw callback with a native canvas drop shadow applied. The "cut
  * paper laid on top of the layer below" trick every panel in the diorama
  * uses. Reset immediately after so the shadow never leaks onto whatever
  * draws next.
@@ -119,7 +119,7 @@ export function withShadow(ctx, fn, { dx = 0, dy = 5, blur = 9, color = 'rgba(18
     ctx.restore();
 }
 
-/** Rounded-rect path, filled with a color — the base cutout shape for every prop layer. */
+/** Rounded-rect path, filled with a color. The base cutout shape for every prop layer. */
 export function roundedPanel(ctx, x, y, w, h, r, color) {
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, r);
@@ -127,7 +127,7 @@ export function roundedPanel(ctx, x, y, w, h, r, color) {
     ctx.fill();
 }
 
-/** Plain blit at float coordinates — no rounding, unlike the pixel engine's drawSprite. */
+/** Plain blit at float coordinates. No rounding, unlike the pixel engine's drawSprite. */
 export function drawLayer(ctx, sprite, x, y) {
     ctx.drawImage(sprite.canvas, x, y);
 }

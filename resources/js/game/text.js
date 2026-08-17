@@ -2,11 +2,11 @@
 //
 // fillText antialiases and hints, which puts grey half-pixels on the grid and
 // instantly breaks the illusion at a 3-6x upscale. Each glyph is written here
-// as its own 6-row grid so the shape is readable straight from the source —
+// as its own 6-row grid so the shape is readable straight from the source,
 // no bit-twiddling required to see or edit a letter. This engine never
 // smooths a glyph edge, so "smaller but still detailed" can't come from
 // rendering the same grid at a fractional pixel size (that's just blur by
-// another name) — it has to come from a tighter grid. 4x6 is one column and
+// another name). It has to come from a tighter grid. 4x6 is one column and
 // one row past the original 3x5: just enough for round letters (O/C/S/G) to
 // get a flat-ish top/bottom instead of a single-pixel apex, without the
 // footprint growing much past the original.
@@ -61,7 +61,7 @@ export const GLYPHS = {
 
 /**
  * Per-character advance override, for the rare glyph whose ink doesn't fill
- * the 4px box — I is a single 1px stroke, so advancing the full 5px like a
+ * the 4px box. I is a single 1px stroke, so advancing the full 5px like a
  * boxy letter left a visibly wider gap after it than after anything else.
  */
 const ADVANCE_OVERRIDES = { I: 2 };
@@ -120,7 +120,7 @@ export function wrapText(text, maxWidthPx) {
 /**
  * A word as it might appear in a scrying orb: centred on `cx`, each glyph
  * bobbing on its own phase and stepping between two colours rather than
- * fading — the same reasoning as the twinkling stars elsewhere in this game,
+ * fading. The same reasoning as the twinkling stars elsewhere in this game,
  * a half-lit pixel reads as blur, not as shimmer. The bob is what makes it
  * "swirly" rather than just floating text; it has to be uneven letter to
  * letter or the whole word just bounces as one rigid block.

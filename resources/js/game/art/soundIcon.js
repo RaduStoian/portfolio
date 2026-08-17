@@ -4,13 +4,13 @@ import { makeCanvas, rect, px, outlineSprite } from '../pixel.js';
 // The volume control sits outside any scene's canvas (it's DOM chrome, fixed
 // to the viewport, since it needs a real range input), but it still has to
 // look like it belongs in this world. Everything else in the game is baked
-// true-size and blitted scaled with smoothing off — this is the same trick,
+// true-size and blitted scaled with smoothing off. This is the same trick,
 // just rendered into a plain `<canvas>` element instead of a scene.
 
 /**
  * A speaker cone in the game's own iron-and-gold palette, one frame per
  * volume state. Waves are drawn as short stepped dashes, not the smooth
- * concentric arcs a system icon would use — the same "twinkle in discrete
+ * concentric arcs a system icon would use. The same "twinkle in discrete
  * steps, not a fade" reasoning the stars and lamps use elsewhere: a half-lit
  * pixel reads as blur, not as a clean wave.
  */

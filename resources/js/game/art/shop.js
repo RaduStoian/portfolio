@@ -4,7 +4,7 @@ import { drawText, textWidth } from '../text.js';
 import { bakeBarrel, bakeCrate, bakeGlow } from './props.js';
 
 // The projects scene: an RPG curio shop. Each project on the wall is a physical
-// object made of a *material*, and the material is the whole point — the scene
+// object made of a *material*, and the material is the whole point. The scene
 // is only interesting if you can tell at a glance that the orb will smash, the
 // statue will thud, and the anvil will never do either.
 
@@ -21,8 +21,8 @@ export const FLOOR_Y = 158;
  * dressing. Its space now belongs to the anvil.
  *
  * The numbers are not free. Each shelf has to clear the tallest thing standing
- * on it *plus* its plinth — 38px for the chest on its two-line plinth, 37 for
- * the gilded statue — and the top one has to stay under the rafter at y=20.
+ * on it *plus* its plinth: 38px for the chest on its two-line plinth, 37 for
+ * the gilded statue. The top one also has to stay under the rafter at y=20.
  */
 export const SHELVES = [
     { y: 57, x0: 10, x1: 166 },
@@ -36,7 +36,7 @@ export const COUNTER = { x: 224, y: 134, w: 90, h: SHOP_H - 134 };
 // Room
 // ---------------------------------------------------------------------------
 
-/** Wall, floor, shelves, counter-side window — everything that never moves. */
+/** Wall, floor, shelves, counter-side window. Everything that never moves. */
 export function bakeShopBackdrop() {
     const s = makeCanvas(SHOP_W, SHOP_H);
     const { ctx } = s;
@@ -53,7 +53,7 @@ export function bakeShopBackdrop() {
     //
     // Deliberately a step darker than everything standing on it. At the first
     // pass the wall, the shelves, the plinths and the floor were all the same
-    // mid-brown and the whole scene flattened into one wooden mass — a shop is
+    // mid-brown and the whole scene flattened into one wooden mass. A shop is
     // only legible if the merchandise out-values its backdrop.
     rect(ctx, 0, 20, SHOP_W, FLOOR_Y - 20, P.woodDark);
     dither(ctx, 0, 20, SHOP_W, 16, P.woodDeep, P.woodDark, 0.6);
@@ -99,8 +99,8 @@ export function bakeShopBackdrop() {
         rect(ctx, x, FLOOR_Y + 18, 1, 2, P.clothDark);
     }
 
-    // Window behind the counter, looking out on the overworld's golden hour —
-    // same sky keys as the town square, so the shop is obviously *in* it.
+    // Window behind the counter, looking out on the overworld's golden hour.
+    // Same sky keys as the town square, so the shop is obviously *in* it.
     windowOnWall(ctx, 246, 26, 50, 34);
 
     // Shelf boards with bracket corbels.
@@ -123,7 +123,7 @@ export function bakeShopBackdrop() {
     }
 
     // Hanging shop sign, in the gap of wall between the shelves and the
-    // counter — over the window it just read as a shutter.
+    // counter. Over the window it just read as a shutter.
     const signW = textWidth('CURIOS') + 8;
     const signX = 195 - Math.round(signW / 2);
     rect(ctx, signX + 3, 20, 1, 6, P.ironDark);
@@ -224,7 +224,7 @@ export function bakeCounterTop() {
 /**
  * The shopkeeper: a hooded merchant, arms folded, watching you handle the
  * merchandise. Eyes are returned as coordinates rather than baked shut so the
- * scene can blink them by painting a lid pixel — one baked frame plus two
+ * scene can blink them by painting a lid pixel. One baked frame plus two
  * pixels is cheaper than a second sprite and reads exactly the same.
  */
 export function bakeShopkeeper() {
@@ -284,7 +284,7 @@ export function bakeShopkeeper() {
 /** Speech bubble the shopkeeper throws up when you break something. */
 /**
  * `lines` can be a single line (the "MY WARES!" break reaction) or an array
- * (a wrapped project description) — the body grows to fit either. The tail's
+ * (a wrapped project description). The body grows to fit either. The tail's
  * position is derived from the body height rather than hard-coded, so a
  * three-line description gets the same tail shape as a one-liner, just
  * lower.
@@ -315,12 +315,12 @@ export function bakeBubble(lines) {
 /**
  * The little wooden stand each project sits on, with its name carved into the
  * front face. In a side-on view the item sits entirely *above* the plinth, so
- * the label is never occluded — which is why the label lives here and not on a
+ * the label is never occluded, which is why the label lives here and not on a
  * separate tag.
  *
  * `withLink` reserves room after the label for a glowing arrow icon, baked as
  * a fixed slot regardless of whether a URL ends up being available at
- * runtime — the label stays centred in its own region either way, so the
+ * runtime. The label stays centred in its own region either way, so the
  * plinth never re-centres itself once the project API call resolves.
  * `linkAnchor` is where the scene should draw (and hit-test) that arrow, in
  * the plinth's own local coordinates.
@@ -359,7 +359,7 @@ export function bakePlinth(lines, { withLink = false } = {}) {
 // The projects
 // ---------------------------------------------------------------------------
 
-/** Mindstare — a seer's scrying orb. Glass: the most fragile thing in here. */
+/** Mindstare: a seer's scrying orb. Glass: the most fragile thing in here. */
 export function bakeOrb(r = 8) {
     const size = r * 2;
     const s = makeCanvas(size, size);
@@ -404,7 +404,7 @@ export function bakeOrb(r = 8) {
 }
 
 /**
- * Vhoice — a gilded orator, arm up mid-speech. Gold: heavy, dull, hard to
+ * Vhoice: a gilded orator, arm up mid-speech. Gold: heavy, dull, hard to
  * break. Kept to 23px because the top shelf has to clear it, its plinth and
  * the rafter.
  */
@@ -455,7 +455,7 @@ export function bakeStatue() {
 }
 
 /**
- * MovieSwiper — a striped popcorn bag. Never breaks; it *spills*, which is a
+ * MovieSwiper: a striped popcorn bag. Never breaks; it *spills*, which is a
  * better joke and a better toy. `filled` picks how high the mound sits.
  */
 export function bakePopcornBag(filled = 1) {
@@ -511,11 +511,11 @@ export function bakePopcorn(variant = 0) {
     return s;
 }
 
-// ForgeKit — an anvil, the centrepiece of the floor now that its shelf is
+// ForgeKit: an anvil, the centrepiece of the floor now that its shelf is
 // gone. `ANVIL_PARTS` is the *only* description of its silhouette: bakeAnvil
 // paints these same rectangles and the scene builds a compound physics body
 // from these same rectangles, so the collider can never drift out of step
-// with what's drawn — which is exactly the bug the horn used to have as a
+// with what's drawn, which is exactly the bug the horn used to have as a
 // single bounding box.
 export const ANVIL_W = 40;
 export const ANVIL_H = 24;
@@ -526,7 +526,7 @@ export const ANVIL_PARTS = [
     { name: 'base', x: 5, y: 15, w: 30, h: 8 },
 ];
 
-/** ForgeKit — an anvil. Iron: unbreakable, and it breaks everything else. */
+/** ForgeKit: an anvil. Iron: unbreakable, and it breaks everything else. */
 export function bakeAnvil() {
     const s = makeCanvas(ANVIL_W, ANVIL_H);
     const { ctx } = s;
@@ -560,15 +560,15 @@ export function bakeAnvil() {
     return outlineSprite(s, P.outline);
 }
 
-// The smith's hammer: a real physics object now, not a scripted animation —
-// you pick it up and swing it yourself. Exported so the scene builds its
+// The smith's hammer: a real physics object now, not a scripted animation.
+// You pick it up and swing it yourself. Exported so the scene builds its
 // compound body (head + handle) from these exact numbers instead of a second
 // guess at them.
 export const HAMMER_HEAD_W = 10;
 export const HAMMER_HEAD_H = 8;
 export const HAMMER_HANDLE_LEN = 22;
 
-/** Drawn lying flat, grip at the left — the end the handle part is built from. */
+/** Drawn lying flat, grip at the left. The end the handle part is built from. */
 export function bakeSmithHammer() {
     const w = HAMMER_HANDLE_LEN + HAMMER_HEAD_W;
     const s = makeCanvas(w, HAMMER_HEAD_H);
@@ -590,7 +590,7 @@ export function bakeSmithHammer() {
 
 /**
  * The little glowing marker set into a plinth after its label, saying "click
- * me" — a diagonal arrow into a corner bracket, pointing toward wherever a
+ * me". A diagonal arrow into a corner bracket, pointing toward wherever a
  * fuller writeup of the project lives. Sized to fit inside even a one-line
  * plinth (11px tall before outline padding). Baked once; the scene animates
  * its glow rather than baking multiple frames.
@@ -609,7 +609,7 @@ export function bakeArrow() {
 
 // ForgeKit's display item: a stone-and-iron forge, its mouth always glowing
 // with embers. The anvil (below) is deliberately *not* this project's display
-// object anymore — it sits unlabelled on the floor to the forge's right,
+// object anymore. It sits unlabelled on the floor to the forge's right,
 // where there's headroom for the hammer to swing.
 export const FORGE_W = 32;
 export const FORGE_H = 38;
@@ -620,7 +620,7 @@ export const FORGE_H = 38;
 const FORGE_MOUTH_H = 16;
 export const FORGE_MOUTH = { x: FORGE_W / 2 + 1, y: FORGE_H - 8 - FORGE_MOUTH_H / 2 + 1 };
 
-/** ForgeKit — a squat stone forge with an iron band and a glowing mouth. */
+/** ForgeKit: a squat stone forge with an iron band and a glowing mouth. */
 export function bakeForge() {
     const s = makeCanvas(FORGE_W, FORGE_H);
     const { ctx } = s;
@@ -636,7 +636,7 @@ export function bakeForge() {
     }
     speckle(ctx, 0, 6, FORGE_W, FORGE_H - 6, P.stoneDeep, 0.05, 71);
 
-    // Iron banding low on the body — the same metal the anvil and the arrow
+    // Iron banding low on the body. The same metal the anvil and the arrow
     // are made of, which is what visually ties the forge to "ForgeKit".
     rect(ctx, 0, FORGE_H - 8, FORGE_W, 3, P.ironDark);
     rect(ctx, 0, FORGE_H - 8, FORGE_W, 1, P.iron);
@@ -669,7 +669,7 @@ export function bakeForge() {
 export const LID_SEAM = 2;
 
 /**
- * Physics Museum — a Pandora's chest. Body and lid are separate sprites so the
+ * Physics Museum: a Pandora's chest. Body and lid are separate sprites so the
  * lid can hinge open; the physics body covers both, closed.
  */
 export function bakeChest() {
@@ -793,15 +793,15 @@ export function buildShop() {
     const displays = [
         // `shelf` places a display on a board; `onFloor` stands it on the
         // floorboards instead (still on its own small plinth). The anvil is
-        // deliberately *not* in this list — see buildShop's return below.
+        // deliberately *not* in this list. See buildShop's return below.
         {
             id: 'mindstare',
             label: 'Mindstare',
             plinth: bakePlinth('MINDSTARE', { withLink: true }),
             sprite: bakeOrb(8),
             kind: 'orb',
-            // Glass in every way it looks and feels — brittle friction,
-            // glassy restitution — but an Infinity threshold means it never
+            // Glass in every way it looks and feels. Brittle friction,
+            // glassy restitution, but an Infinity threshold means it never
             // actually shatters. The scrying orb is the one thing in the shop
             // that's meant to survive being handled roughly.
             material: 'crystal',
@@ -847,7 +847,7 @@ export function buildShop() {
             kind: 'forge',
             material: 'iron',
             onFloor: true,
-            // Far left of the room — the anvil sits on the floor to its
+            // Far left of the room: the anvil sits on the floor to its
             // right, with the run of open floor between it and the counter
             // that its hammer swing actually needs.
             x: 54,

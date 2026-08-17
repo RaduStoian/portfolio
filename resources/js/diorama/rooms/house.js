@@ -1,8 +1,8 @@
 // The "about me" room, redrawn in the diorama style: flat cutout layers with
 // native canvas drop shadows, instead of pixel-grid sprites. Laid out to
 // match game/art/house.js + game/scenes/house.vue as closely as the two
-// styles allow — same beam, window, pegboard, bookshelf, record stand, desk
-// and couch arrangement — while sharing no code with them.
+// styles allow. Same beam, window, pegboard, bookshelf, record stand, desk
+// and couch arrangement, while sharing no code with them.
 
 import { D } from '../palette.js';
 import { withShadow, roundedPanel, foldShade, glow, hash2 } from '../render.js';

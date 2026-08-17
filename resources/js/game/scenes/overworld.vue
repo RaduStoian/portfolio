@@ -12,6 +12,7 @@
       @wheel="onWheel"
     ></canvas>
 
+    <RouterLink to="/" class="exit">&larr; Site</RouterLink>
   </div>
 </template>
 
@@ -244,4 +245,20 @@ export default {
   cursor: pointer;
 }
 
+.exit {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(20, 16, 30, 0.55);
+  color: #f1eef7;
+  text-decoration: none;
+  font-size: 13px;
+  backdrop-filter: blur(6px);
+}
+
+.exit:hover {
+  background: rgba(20, 16, 30, 0.75);
+}
 </style>

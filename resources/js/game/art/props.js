@@ -105,7 +105,7 @@ export function bakeBush(seed = 0, size = 1) {
     return outlineSprite(s, P.outline);
 }
 
-/** Street lamp — a post with a warm lantern on top. */
+/** Street lamp: a post with a warm lantern on top. */
 export function bakeLamp() {
     const s = makeCanvas(9, 34);
     const { ctx } = s;
@@ -182,7 +182,7 @@ export function bakeSignpost() {
     rect(ctx, 1, 2, 14, 8, P.wood);
     rect(ctx, 1, 2, 14, 1, P.woodLit);
     rect(ctx, 1, 9, 14, 1, P.woodDeep);
-    // Faint carved marks — deliberately illegible, it's 14px wide.
+    // Faint carved marks: deliberately illegible, it's 14px wide.
     rect(ctx, 3, 5, 6, 1, P.woodDeep);
     rect(ctx, 3, 7, 9, 1, P.woodDeep);
 

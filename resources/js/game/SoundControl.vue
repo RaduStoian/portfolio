@@ -43,7 +43,7 @@ export default {
     // as real pixel art instead of concentric border-radius arcs.
     const iconState = computed(() => (volume.value === 0 ? 'muted' : volume.value > 0.35 ? 'high' : 'low'));
 
-    // Baked once — three tiny true-size frames, blitted scaled with
+    // Baked once: three tiny true-size frames, blitted scaled with
     // smoothing off, the same rule every sprite in the game follows.
     const icons = buildSoundIcons();
 
@@ -84,7 +84,7 @@ export default {
 /*
  * Same iron-and-gold plaque language as the in-canvas Back button
  * (backButton.js): a P.outline border, P.ironDeep fill, a P.iron highlight
- * on the top inner edge and P.ironDark shadow on the bottom — plus four gold
+ * on the top inner edge and P.ironDark shadow on the bottom, plus four gold
  * rivets, which is what turns "dark rounded rectangle" into "a fitted panel
  * bolted to something," matching the shop's lock plates and iron strapping.
  */
@@ -139,7 +139,7 @@ export default {
 /*
  * A chunky vertical fader instead of a default range input: a recessed
  * wood-toned groove with hard tick steps, and a small brass rivet for a
- * thumb — square, beveled, no border-radius, so it reads as a physical slide
+ * thumb. Square, beveled, no border-radius, so it reads as a physical slide
  * control rather than browser chrome.
  */
 .volume-slider {

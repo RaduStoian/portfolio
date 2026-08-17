@@ -3,7 +3,7 @@
 //
 // The overworld sits at golden hour and the graveyard at night; they share the
 // same greens, woods and stones so a fence looks like the same fence in both,
-// and differ only in their sky/light keys. Warm, saturated, chunky — aiming at
+// and differ only in their sky/light keys. Warm, saturated, chunky. Aiming at
 // the cosy end of pixel art rather than the muted-horror end.
 
 export const P = {
@@ -21,7 +21,7 @@ export const P = {
     nightLow: '#4e3a5c',
     nightHorizon: '#6b4a5e',
 
-    // Grass — four steps so ground can have real form instead of flat fill.
+    // Grass: four steps so ground can have real form instead of flat fill.
     grassLit: '#84b556',
     grass: '#5f9440',
     grassDark: '#437030',
@@ -61,7 +61,7 @@ export const P = {
     ember: '#ff9d5c',
 
     // Shop materials. Each is a full ramp because the shop's whole conceit is
-    // that you can tell what a thing is made of *before* you throw it — glass
+    // that you can tell what a thing is made of *before* you throw it. Glass
     // has to look brittle and gold has to look heavy.
     glassLit: '#dcefff',
     glass: '#8fc4ea',

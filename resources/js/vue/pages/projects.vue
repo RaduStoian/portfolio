@@ -1,27 +1,31 @@
 <template>
-  <section>
-    <h1>Projects</h1>
+  <section class="page">
+    <header class="head">
+      <h1 class="display">Projects</h1>
+      <p>Some of what I've worked on.</p>
+    </header>
 
-    <p v-if="loading">Loading…</p>
-    <p v-else-if="error">Couldn't load projects.</p>
-    <p v-else-if="!projects.length">No projects yet — add some to the database.</p>
+    <p v-if="loading" class="state">Loading…</p>
+    <p v-else-if="error" class="state">Couldn't load projects right now.</p>
+    <p v-else-if="!projects.length" class="state">No projects yet.</p>
 
-    <ul v-else class="list">
-      <li v-for="project in projects" :key="project.id" class="card">
-        <h2>
-          <a v-if="project.url" :href="project.url" target="_blank" rel="noopener">{{ project.title }}</a>
-          <span v-else>{{ project.title }}</span>
-        </h2>
-        <p class="year">{{ project.year }}</p>
-        <p>{{ project.description }}</p>
-      </li>
-    </ul>
+    <div v-else class="grid">
+      <ProjectTile
+        v-for="(project, i) in projects"
+        :key="project.id"
+        :project="project"
+        :style="{ '--i': i }"
+      />
+    </div>
   </section>
 </template>
 
 <script>
+import ProjectTile from '../project-tile.vue';
+
 export default {
   name: 'ProjectsPage',
+  components: { ProjectTile },
   data() {
     return { projects: [], loading: true, error: false };
   },
@@ -39,28 +43,40 @@ export default {
 </script>
 
 <style scoped>
-.list {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  gap: 16px;
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 100px 22px 120px;
 }
 
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
+.head {
+  text-align: center;
+  margin-bottom: 64px;
 }
 
-.card h2 {
-  margin: 0;
-  font-size: 20px;
+h1 {
+  font-size: clamp(40px, 7vw, 76px);
 }
 
-.year {
-  margin: 4px 0 8px;
+.head p {
+  margin: 20px 0 0;
+  font-size: 18px;
   color: var(--text-muted);
-  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 60px 0;
+}
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: 1fr; }
 }
 </style>

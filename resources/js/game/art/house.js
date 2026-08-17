@@ -251,7 +251,7 @@ export function bakeCatFrames() {
         poly(ctx, [[27, headY + 8], [29, headY + 2], [34, headY + 4], [40, headY + 1], [43, headY + 8], [42, headY + 15], [36, headY + 18], [30, headY + 15]], P.ironDark);
         poly(ctx, [[29, headY + 5], [30, headY], [34, headY + 4]], P.ironDark);
         // The same triangle as the left ear (base-left, tip 1px right of it,
-        // base-right 5px further on) just translated to this base — a
+        // base-right 5px further on) just translated to this base. A
         // centred tip read as a soft, floppy shape next to the left ear's
         // sharply leaning one; matching the lean is what makes them read as
         // a pair.
@@ -259,7 +259,7 @@ export function bakeCatFrames() {
         rect(ctx, 31, headY + 7, 9, 7, '#626879');
 
         // Eyes: a small gold iris block with a white catchlight in its top
-        // corner, not a single round dot — a bare dot at this scale reads as
+        // corner, not a single round dot. A bare dot at this scale reads as
         // a human pupil.
         if (awake) {
             rect(ctx, 32, headY + 7, 2, 2, P.goldLit);
@@ -304,7 +304,7 @@ export function bakeCatTailFrames() {
         const { ctx } = s;
         const tailColor = '#555b6d';
         // A short curl that wraps back in against the haunch, not a long
-        // tube dragged out across the floor — a loafing cat's tail tucks
+        // tube dragged out across the floor. A loafing cat's tail tucks
         // close to the body. Root position (16, 0) is unchanged from before,
         // so this still lines up with the body sprite in house.vue without
         // any change to where it's drawn.
