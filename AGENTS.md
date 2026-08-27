@@ -75,7 +75,9 @@ instead of being baked into the sky.
 
 **Audio is opt-in and globally mixed.** `game/sound.js` owns the persisted
 site-wide volume plus long-lived audio; `SoundControl.vue` is the fixed
-top-right pixel speaker and vertical slider on every route. New visitors start
+top-right iron-and-gold pixel speaker plaque on every route, matching the Back
+button's bevel. It opens a seven-stop vertical pixel fader with no numeric
+readout. New visitors start
 at 50% volume; returning visitors keep their saved setting. The rain and cat
 purr MP3s are reused from the sibling ForgeKit demo under `public/audio/`.
 House rain is scene-local intent and stops on close/unmount; cat purr is a

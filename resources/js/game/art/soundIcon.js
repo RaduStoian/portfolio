@@ -15,41 +15,48 @@ import { makeCanvas, rect, px, outlineSprite } from '../pixel.js';
  * pixel reads as blur, not as a clean wave.
  */
 export function bakeSoundIcon(state) {
-    const s = makeCanvas(15, 13);
+    // 13x11 becomes exactly 15x13 after outlineSprite, matching the HUD
+    // canvas without clipping a row or column.
+    const s = makeCanvas(13, 11);
     const { ctx } = s;
 
-    // Box and cone, side-on.
-    rect(ctx, 1, 4, 3, 5, P.ironLit);
-    rect(ctx, 1, 4, 3, 1, P.bone);
-    rect(ctx, 4, 3, 1, 7, P.ironLit);
-    rect(ctx, 5, 2, 1, 9, P.ironLit);
-    rect(ctx, 6, 1, 1, 11, P.bone);
+    // Box and widening horn, side-on, using the Back plaque's bone and iron.
+    rect(ctx, 0, 4, 3, 4, P.bone);
+    rect(ctx, 0, 4, 3, 1, P.ironLit);
+    rect(ctx, 3, 3, 1, 6, P.ironLit);
+    rect(ctx, 4, 2, 1, 8, P.bone);
+    rect(ctx, 5, 1, 1, 10, P.bone);
+
+    const out = outlineSprite(s, P.outline);
+    const wave = out.ctx;
 
     if (state === 'muted') {
-        px(ctx, 9, 4, P.cloth);
-        px(ctx, 10, 5, P.cloth);
-        px(ctx, 11, 6, P.cloth);
-        px(ctx, 12, 7, P.cloth);
-        px(ctx, 9, 7, P.cloth);
-        px(ctx, 10, 6, P.cloth);
-        px(ctx, 12, 4, P.cloth);
-        px(ctx, 11, 5, P.cloth);
+        px(wave, 9, 4, P.cloth);
+        px(wave, 10, 5, P.cloth);
+        px(wave, 11, 6, P.cloth);
+        px(wave, 10, 7, P.cloth);
+        px(wave, 9, 8, P.cloth);
+        px(wave, 9, 7, P.cloth);
+        px(wave, 10, 6, P.cloth);
+        px(wave, 11, 5, P.cloth);
+        px(wave, 10, 4, P.cloth);
     } else {
-        // A near dash, always present once there's any volume at all.
-        px(ctx, 9, 5, P.goldLit);
-        px(ctx, 9, 6, P.goldLit);
-        px(ctx, 9, 7, P.goldLit);
+        // Stepped parentheses read as sound waves without any smooth CSS arc.
+        px(wave, 8, 4, P.goldLit);
+        px(wave, 9, 5, P.goldLit);
+        px(wave, 9, 7, P.goldLit);
+        px(wave, 8, 8, P.goldLit);
         if (state === 'high') {
-            // A second, farther dash only once the volume is loud enough to
-            // actually carry that far.
-            px(ctx, 12, 3, P.goldLit);
-            px(ctx, 12, 9, P.goldLit);
-            px(ctx, 13, 4, P.goldLit);
-            px(ctx, 13, 8, P.goldLit);
+            px(wave, 10, 2, P.goldLit);
+            px(wave, 11, 3, P.goldLit);
+            px(wave, 12, 4, P.goldLit);
+            px(wave, 12, 8, P.goldLit);
+            px(wave, 11, 9, P.goldLit);
+            px(wave, 10, 10, P.goldLit);
         }
     }
 
-    return outlineSprite(s, P.outline);
+    return out;
 }
 
 export function buildSoundIcons() {

@@ -11,14 +11,16 @@
     </button>
 
     <div v-if="open" class="volume-panel" @pointerdown.stop>
-      <span class="volume-number">{{ Math.round(volume * 100) }}</span>
+      <span class="volume-notches" aria-hidden="true">
+        <i v-for="step in 7" :key="step"></i>
+      </span>
       <input
         class="volume-slider"
         type="range"
         min="0"
-        max="100"
+        max="6"
         step="1"
-        :value="Math.round(volume * 100)"
+        :value="volumeStep"
         aria-label="Site volume"
         @input="changeVolume"
       />
@@ -38,6 +40,7 @@ export default {
     const iconCanvas = ref(null);
     const open = ref(false);
     const volume = computed(() => soundState.volume);
+    const volumeStep = computed(() => Math.round(volume.value * 6));
 
     // Same three states the old CSS version keyed its waves off, just baked
     // as real pixel art instead of concentric border-radius arcs.
@@ -59,7 +62,7 @@ export default {
     const closeOutside = (event) => {
       if (open.value && !root.value?.contains(event.target)) open.value = false;
     };
-    const changeVolume = (event) => setVolume(Number(event.target.value) / 100);
+    const changeVolume = (event) => setVolume(Number(event.target.value) / 6);
 
     watch(iconState, drawIcon);
     onMounted(() => {
@@ -68,7 +71,7 @@ export default {
     });
     onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOutside));
 
-    return { root, iconCanvas, open, volume, changeVolume };
+    return { root, iconCanvas, open, volumeStep, changeVolume };
   },
 };
 </script>
@@ -84,20 +87,19 @@ export default {
 /*
  * Same iron-and-gold plaque language as the in-canvas Back button
  * (backButton.js): a P.outline border, P.ironDeep fill, a P.iron highlight
- * on the top inner edge and P.ironDark shadow on the bottom, plus four gold
- * rivets, which is what turns "dark rounded rectangle" into "a fitted panel
- * bolted to something," matching the shop's lock plates and iron strapping.
+ * on the top inner edge and P.ironDark shadow on the bottom.
  */
 .sound-button {
   position: relative;
-  width: 34px;
+  width: 38px;
   height: 30px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #2b2f3d;
-  border: 3px solid #2e2333;
+  border: 2px solid #2e2333;
+  box-shadow: inset 0 2px #6b7183, inset 0 -2px #454a5c;
   outline: none;
   cursor: pointer;
 }
@@ -116,24 +118,36 @@ export default {
 
 .volume-panel {
   position: absolute;
-  top: 34px;
+  top: 32px;
   right: 0;
-  width: 34px;
-  height: 142px;
+  width: 38px;
+  height: 116px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 6px 3px;
+  justify-content: center;
+  padding: 8px 3px;
   box-sizing: border-box;
   background: #2b2f3d;
-  border: 3px solid #2e2333;
+  border: 2px solid #2e2333;
   box-shadow: inset 0 2px #6b7183, inset 0 -2px #454a5c;
 }
 
-.volume-number {
-  color: #ffe9a0;
-  font: 9px/1 monospace;
+.volume-notches {
+  position: absolute;
+  inset: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.volume-notches i {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #454a5c;
+  box-shadow: inset 2px 0 #6b7183, inset -2px 0 #2e2333;
 }
 
 /*
@@ -146,20 +160,20 @@ export default {
   appearance: none;
   -webkit-appearance: none;
   width: 14px;
-  height: 108px;
+  height: 96px;
   margin: 0;
   writing-mode: vertical-lr;
   direction: rtl;
   cursor: pointer;
   background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .volume-slider::-webkit-slider-runnable-track {
   width: 8px;
   height: 100%;
-  background:
-    repeating-linear-gradient(0deg, #6d4512 0, #6d4512 1px, transparent 1px, transparent 13px),
-    #402615;
+  background: #402615;
   border: 2px solid #2e2333;
   box-shadow: inset 1px 0 #221b2b, inset -1px 0 #5e3a22;
 }
@@ -178,9 +192,7 @@ export default {
 .volume-slider::-moz-range-track {
   width: 8px;
   height: 100%;
-  background:
-    repeating-linear-gradient(0deg, #6d4512 0, #6d4512 1px, transparent 1px, transparent 13px),
-    #402615;
+  background: #402615;
   border: 2px solid #2e2333;
   box-shadow: inset 1px 0 #221b2b, inset -1px 0 #5e3a22;
 }
