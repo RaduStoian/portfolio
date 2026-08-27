@@ -8,7 +8,7 @@
         <p class="role">Senior Full-Stack Developer</p>
       </header>
 
-      <h2 class="section-label">Personal projects</h2>
+      <h2 class="section-label">Personal live projects</h2>
 
       <div class="stack">
         <!-- One project leads, the rest fill a 2x2 beneath it. With five
