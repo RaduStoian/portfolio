@@ -98,6 +98,28 @@ crisp 2x pixels. Its generous viewport hit-area uses browser history and falls
 back to the town square on a direct visit. Remaining HTML utility controls sit
 top-right so they never cover the plaque.
 
+## Content, SEO and deployment
+
+The project list lives in `resources/data/projects.json` — one file, read by
+both sides: the bundle imports it via `resources/js/data/projects.js`, and PHP
+reads it through `App\Support\Site::projects()` for the JSON-LD and `/llms.txt`.
+There is no `projects` table and no `/api/projects` any more.
+
+`App\Support\Site::PAGES` is the server's map of the site: per-page `<title>`,
+description and sitemap priority. **Adding a route to
+`resources/js/router/index.js` means adding it here too** — otherwise it gets
+the home page's metadata and a 404 status, because `routes/web.php` only serves
+a 200 for paths listed in `PAGES`. Everything else is generated from that map:
+`/sitemap.xml`, `/robots.txt` and `/llms.txt` (`SeoController`, views in
+`resources/views/seo/`). robots.txt is a route, not a file in `public/`, so it
+can use `APP_URL`; don't reintroduce the static one, it would shadow the route.
+
+Deployment is one Docker container (`Dockerfile`, `docker/entrypoint.sh`) behind
+a reverse proxy — see `DEPLOY.md`. `APP_URL` drives every canonical, og:url and
+sitemap entry, and https URLs are forced whenever it is https, so a wrong
+`APP_URL` shows up as either `portfolio.test` in the sitemap or mixed-content
+blocks in the browser.
+
 ## Structure
 
 ```
@@ -149,10 +171,10 @@ resources/js/game/
   shelf gap can't give it) with a glowing smith's hammer resting on it: pick
   the hammer up yourself and strike the anvil to throw real spark *bodies*
   that bounce, fade fast, and can break other things on the way. Every plinth
-  that has a matching row in the `projects` table (matched by title, see
-  `DatabaseSeeder`) gets a glowing arrow that opens that project's real URL in
-  a new tab. The plain database-backed list still exists at
-  `/projects/list`, linked from the HUD.
+  that has a matching entry in `resources/js/data/projects.js` (matched by
+  title) gets a glowing arrow that opens that project's real URL in a new tab.
+  The plain list still exists at `/projects/list`, linked from the HUD, and
+  reads from the same module.
 - **Career** (`/career`) — the clocktower's guild archive: four hanging,
   clickable employment contracts form a ten-year timeline. Touching one makes
   it swing and prompts the seated archivist to summarize that role. A permanent

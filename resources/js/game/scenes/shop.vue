@@ -30,6 +30,7 @@ import { createCameraInput } from '../cameraInput.js';
 import { grabAt } from '../grab.js';
 import { P } from '../palette.js';
 import { rect, px, drawSprite } from '../pixel.js';
+import { PROJECTS } from '../../data/projects.js';
 import { drawSwirlyText, wrapText } from '../text.js';
 import { shatterCells, cellCoverage, bakeDust } from '../art/shared.js';
 import {
@@ -346,22 +347,14 @@ export default {
     // --- project links -------------------------------------------------------
     // A small glowing arrow set into each plinth right after its label, so
     // the physical toy isn't the only way to reach a project. Clicking it
-    // opens the real writeup in a new tab. `urls` fills in asynchronously
-    // from the same API the plain /projects page uses; a plinth with
-    // nothing to link to just never lights its arrow up.
+    // opens the real writeup in a new tab. `urls` comes from the same list
+    // the plain /projects page uses; a plinth with nothing to link to just
+    // never lights its arrow up.
     const urls = {};
-    window.axios
-      ?.get('/api/projects')
-      .then(({ data }) => {
-        for (const project of data) {
-          const match = art.displays.find((d) => d.label.toLowerCase() === String(project.title).toLowerCase());
-          if (match && project.url) urls[match.id] = project.url;
-        }
-      })
-      .catch(() => {
-        // No projects configured yet, or the request failed. The shop still
-        // works as a toy, it just has no arrows to click.
-      });
+    for (const project of PROJECTS) {
+      const match = art.displays.find((d) => d.label.toLowerCase() === String(project.title).toLowerCase());
+      if (match && project.url) urls[match.id] = project.url;
+    }
 
     // `bakePlinth`'s `withLink` option reserves this slot and reports where
     // it is; a plinth baked without it (none currently) has no anchor and no

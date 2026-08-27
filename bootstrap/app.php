@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // The container sits behind a reverse proxy in production, so without
+        // this every url() — canonicals, og:url, the sitemap — comes out as
+        // http:// on the internal port instead of the public https:// URL.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -10,10 +10,7 @@
 
       <h2 class="section-label">Personal projects</h2>
 
-      <p v-if="loading" class="state">Loading…</p>
-      <p v-else-if="error" class="state">Couldn't load projects right now.</p>
-
-      <div v-else class="stack">
+      <div class="stack">
         <!-- One project leads, the rest fill a 2x2 beneath it. With five
              projects an even grid would leave the last one orphaned beside an
              empty half, and this gives the page a clear entry point besides. -->
@@ -79,6 +76,7 @@ import { ref } from 'vue';
 import ProjectTile from '../project-tile.vue';
 import ContributionGraph from '../contribution-graph.vue';
 import { useReveal } from '../useReveal.js';
+import { PROJECTS } from '../../data/projects';
 
 // Which project leads the page. Matched case-insensitively on title so a
 // reorder in the database can't silently change the layout.
@@ -104,7 +102,7 @@ export default {
     return { rootRef };
   },
   data() {
-    return { skills: SKILLS, projects: [], loading: true, error: false };
+    return { skills: SKILLS, projects: PROJECTS };
   },
   computed: {
     featured() {
@@ -120,16 +118,6 @@ export default {
       // The current year doesn't count until the anniversary month arrives.
       return now.getMonth() < CAREER_START.month ? years - 1 : years;
     },
-  },
-  async mounted() {
-    try {
-      const { data } = await window.axios.get('/api/projects');
-      this.projects = data;
-    } catch {
-      this.error = true;
-    } finally {
-      this.loading = false;
-    }
   },
 };
 </script>

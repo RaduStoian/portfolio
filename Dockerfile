@@ -19,7 +19,8 @@ RUN composer dump-autoload --optimize --no-dev
 # ---- runtime: single container, FrankenPHP serves http on :80 ----
 FROM dunglas/frankenphp:php8.4-alpine
 
-RUN install-php-extensions pdo_mysql opcache intl zip gd
+RUN install-php-extensions pdo_mysql opcache intl zip gd \
+    && apk add --no-cache curl
 
 WORKDIR /app
 
@@ -32,6 +33,10 @@ RUN chmod +x /usr/local/bin/entrypoint \
 
 ENV SERVER_NAME=:80
 EXPOSE 80
+
+# /up is Laravel's built-in health endpoint (see bootstrap/app.php).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://127.0.0.1/up || exit 1
 
 ENTRYPOINT ["entrypoint"]
 CMD ["frankenphp", "php-server", "--root", "/app/public", "--listen", ":80"]

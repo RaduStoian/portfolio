@@ -5,9 +5,7 @@
       <p>Some of what I've worked on.</p>
     </header>
 
-    <p v-if="loading" class="state">Loading…</p>
-    <p v-else-if="error" class="state">Couldn't load projects right now.</p>
-    <p v-else-if="!projects.length" class="state">No projects yet.</p>
+    <p v-if="!projects.length" class="state">No projects yet.</p>
 
     <div v-else class="grid">
       <ProjectTile
@@ -22,22 +20,13 @@
 
 <script>
 import ProjectTile from '../project-tile.vue';
+import { PROJECTS } from '../../data/projects';
 
 export default {
   name: 'ProjectsPage',
   components: { ProjectTile },
   data() {
-    return { projects: [], loading: true, error: false };
-  },
-  async mounted() {
-    try {
-      const { data } = await window.axios.get('/api/projects');
-      this.projects = data;
-    } catch {
-      this.error = true;
-    } finally {
-      this.loading = false;
-    }
+    return { projects: PROJECTS };
   },
 };
 </script>
