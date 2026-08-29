@@ -25,13 +25,13 @@
     "title": "MovieSwiper",
     "year": 2024,
     "description": "Tinder for films. Swipe with your friends and match on something everyone wants to watch.",
-    "url": null
+    "url": "https://movieswiper.stoianworks.com"
   },
   {
     "id": "physics-museum",
     "title": "Physics Museum",
     "year": 2024,
     "description": "A physics museum you explore in the browser, with interactive 3D exhibits rendered in real time.",
-    "url": null
+    "url": "https://physics.stoianworks.com"
   }
 ]
