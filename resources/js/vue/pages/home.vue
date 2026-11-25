@@ -8,7 +8,7 @@
         <p class="role">Senior Full-Stack Developer</p>
       </header>
 
-      <h2 class="section-label">Personal live projects</h2>
+      <h2 class="section-label">Live projects and software</h2>
 
       <div class="stack">
         <!-- One project leads, the rest fill a 2x2 beneath it. With five
@@ -57,8 +57,8 @@
 
     <!-- Close -->
     <section class="cta">
-      <h2 class="display reveal">Want to work together?</h2>
-      <p class="reveal" style="--d: 0.06s">
+      <h2 class="display reveal">Want to work together or interested in one of our products?</h2>
+      <p class="reveal op-0" style="--d: 0.06s">
         I don't keep a resume up to date, so just tell me what you need and
         I'll send it over.
       </p>
@@ -307,6 +307,10 @@ export default {
   background: var(--accent);
   color: #fff;
   font-weight: 500;
+}
+
+.op-0{
+    opacity: 0 !important;
 }
 
 .btn.primary:hover {

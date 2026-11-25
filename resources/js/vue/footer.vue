@@ -1,6 +1,6 @@
 <template>
   <footer class="footer">
-    <span>&copy; {{ year }} Radu Stoian</span>
+    <span>&copy; {{ year }} Stoian Works LTD</span>
     <a href="mailto:radu.stoian0@gmail.com" class="email">radu.stoian0@gmail.com</a>
     <RouterLink to="/play" class="play">or try the pixel-art version &rarr;</RouterLink>
   </footer>
